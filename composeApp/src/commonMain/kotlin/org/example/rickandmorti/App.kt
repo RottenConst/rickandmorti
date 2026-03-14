@@ -45,7 +45,7 @@ fun App() {
             }
 
             Button(onClick = {
-                viewModel.addGreeting("New greeting at ${currentTimeMillis()}")
+                viewModel.addGreeting("New greeting at ${currentMillis()}")
             }) {
                 Text("add greeting")
             }

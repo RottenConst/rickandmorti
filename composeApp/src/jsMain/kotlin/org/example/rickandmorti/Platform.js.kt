@@ -8,4 +8,4 @@ class JsPlatform : Platform {
 
 actual fun getPlatform(): Platform = JsPlatform()
 
-actual fun currentTimeMillis(): Long = Date.now().toLong()
+actual fun currentMillis(): Long = Date.now().toLong()

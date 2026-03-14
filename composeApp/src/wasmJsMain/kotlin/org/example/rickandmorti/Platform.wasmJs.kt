@@ -5,4 +5,4 @@ class WasmPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = WasmPlatform()
-actual fun currentTimeMillis(): Long = currentTimeMillis()
+actual fun currentMillis(): Long = currentMillis()

@@ -9,4 +9,4 @@ class IOSPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
-actual fun currentTimeMillis(): Long = NSDate().timeIntervalSince1970.toLong() * 1000
+actual fun currentMillis(): Long = NSDate().timeIntervalSince1970.toLong() * 1000
