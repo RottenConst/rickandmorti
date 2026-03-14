@@ -14,14 +14,21 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import org.koin.compose.koinInject
+import org.koin.compose.getKoin
+import org.koin.core.parameter.parametersOf
 
 @Composable
 @Preview
 fun App() {
     MaterialTheme {
 
-        val viewModel: GreetingViewModel = koinInject()
+        val koin = getKoin()
+
+        val viewModel: GreetingViewModel = remember {
+            koin.get<GreetingViewModel> {
+                parametersOf("Hello from Parameter! 🚀")
+            }
+        }
 
         var greetings by remember { mutableStateOf(viewModel.greetings.value) }
 
