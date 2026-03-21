@@ -8,6 +8,6 @@ import org.koin.dsl.module
 val appModule = module {
     singleOf(::GreetingRepository)
     factory { (initial: String) ->
-        GreetingViewModel(initial, get())
+        GreetingViewModel( get(), initial)
     }
 }
