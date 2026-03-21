@@ -35,12 +35,6 @@ kotlin {
         binaries.executable()
     }
 
-    @OptIn(ExperimentalWasmDsl::class)
-    wasmJs {
-        browser()
-        binaries.executable()
-    }
-
     sourceSets {
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
@@ -68,6 +62,9 @@ kotlin {
             implementation(libs.coil.compose.core)
             implementation(libs.coil.compose)
             implementation(libs.coil.network.ktor)
+            implementation(libs.decompose)
+            implementation(libs.decompose.extensions.compose)
+            implementation(libs.kotlinx.serialization.json)
 
         }
         commonTest.dependencies {
@@ -81,7 +78,7 @@ kotlin {
             implementation(libs.slf4j.simple)
             implementation(libs.coil.network.okhttp)
         }
-        wasmJsMain.dependencies {
+        jsMain.dependencies {
             implementation(libs.ktor.client.js)
         }
         iosMain.dependencies {
