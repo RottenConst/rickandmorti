@@ -27,6 +27,8 @@ import coil3.PlatformContext
 import coil3.compose.AsyncImage
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.disk.DiskCache
+import coil3.memory.MemoryCache
+import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import okio.FileSystem
@@ -52,6 +54,9 @@ fun App() {
 
         setSingletonImageLoaderFactory { context ->
             ImageLoader.Builder(context)
+                .diskCachePolicy(CachePolicy.ENABLED)
+                .networkCachePolicy(CachePolicy.ENABLED)
+                .diskCache { newDiskCache() }
                 .crossfade(true)
                 .logger(DebugLogger())
                 .build()
@@ -123,7 +128,9 @@ private fun CharacterItem(character: Character) {
 }
 
 fun getAsyncImageLoader(context: PlatformContext) =
-    ImageLoader.Builder(context).crossfade(true).logger(DebugLogger()).build()
+    ImageLoader.Builder(context).memoryCachePolicy(CachePolicy.ENABLED).memoryCache {
+        MemoryCache.Builder().maxSizePercent(context, 0.3).strongReferencesEnabled(true).build()
+    }.crossfade(true).logger(DebugLogger()).build()
 
 fun newDiskCache(): DiskCache {
     return DiskCache.Builder().directory(FileSystem.SYSTEM_TEMPORARY_DIRECTORY / "image_cache")
