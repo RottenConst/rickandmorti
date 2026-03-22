@@ -30,12 +30,14 @@ class GreetingRepository {
     private val _characters = MutableStateFlow<List<Character>>(emptyList())
     val characters: StateFlow<List<Character>> = _characters
 
-    suspend fun loadCharacters(){
+    suspend fun loadCharacters(): List<Character>{
         try {
             val result = api.getAllCharacters()
-            _characters.value = result
+            return result
         } catch (e: Exception) {
+            println("Error fetching characters: ${e.message}")
             e.printStackTrace()
+            return emptyList()
         }
     }
     suspend fun formatGreetings(name: String): String{

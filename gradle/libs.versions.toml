@@ -22,6 +22,7 @@ ktor = "3.4.1"
 kotlinx-coroutines = "1.10.2"
 kotlinxDatetime = "0.7.1"
 material3 = "1.10.0-alpha05"
+simpleIcons = "1.1.1"
 slf4jSimple = "2.0.17"
 
 [libraries]
@@ -79,6 +80,9 @@ slf4j-simple = { module = "org.slf4j:slf4j-simple", version.ref = "slf4jSimple" 
 # Decompose
 decompose = { module = "com.arkivanov.decompose:decompose", version.ref = "decompose" }
 decompose-extensions-compose = { module = "com.arkivanov.decompose:extensions-compose", version.ref = "decompose" }
+# icon
+simple-icons = { module = "br.com.devsrsouza.compose.icons:simple-icons", version.ref = "simpleIcons" }
+tabler-icons = { module = "br.com.devsrsouza.compose.icons:tabler-icons", version.ref = "simpleIcons" }
 
 [plugins]
 androidApplication = { id = "com.android.application", version.ref = "agp" }
