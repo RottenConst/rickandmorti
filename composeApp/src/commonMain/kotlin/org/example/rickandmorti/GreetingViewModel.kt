@@ -30,6 +30,17 @@ class GreetingViewModel(
 
     init {
         Logger.log("GreetingViewModel created")
+
+        // 🔥 Подписываемся на поток из репозитория один раз
+        coroutineScope.launch {
+            greetingRepository.characters.collect { characters ->
+                Logger.log("VM: Received ${characters.size} characters from repository")
+                _characters.value = characters // Обновляем при ЛЮБОМ изменении (включая loadNextPage)
+            }
+        }
+
+        // Загружаем первую страницу
+        loadCharacters()
     }
 
     @OptIn(FormatStringsInDatetimeFormats::class)
@@ -49,6 +60,16 @@ class GreetingViewModel(
                 _characters.value = result
             } catch (e: Exception) {
                 Logger.log("Error loading characters: ${e.message}")
+                e.printStackTrace()
+            }
+        }
+    }
+
+    fun loadNextPage() {
+        coroutineScope.launch {
+            try {
+                greetingRepository.loadNextPage() // Вызываем загрузку следующей страницы
+            } catch (e: Exception) {
                 e.printStackTrace()
             }
         }

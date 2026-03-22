@@ -44,26 +44,6 @@ fun App(rootComponent: RootComponent) {
     }
 }
 
-
-@Composable
-private fun CharacterItem(character: Character) {
-
-    Row (
-        verticalAlignment = Alignment.CenterVertically,
-        modifier = Modifier.padding(8.dp)
-    ) {
-        AsyncImage(
-            model = character.image,
-            contentDescription = null,
-            modifier = Modifier.size(64.dp),
-            contentScale = ContentScale.Crop
-        )
-        Spacer(modifier = Modifier.width(12.dp))
-        Text("${character.name} (${character.status}) - ${character.species}")
-    }
-    HorizontalDivider()
-}
-
 fun getAsyncImageLoader(context: PlatformContext) =
     ImageLoader.Builder(context).memoryCachePolicy(CachePolicy.ENABLED).memoryCache {
         MemoryCache.Builder().maxSizePercent(context, 0.3).strongReferencesEnabled(true).build()

@@ -7,8 +7,8 @@ import org.example.rickandmorti.data.Character
 import org.example.rickandmorti.data.CharacterResponse
 
 class RickAndMortyApi(private val client: HttpClient) {
-    suspend fun getAllCharacters(): List<Character> {
-        return client.get("https://rickandmortyapi.com/api/character")
+    suspend fun getAllCharacters(page: Int = 1): List<Character> {
+        return client.get("/api/character?page=$page")
             .body<CharacterResponse>()
             .results
     }

@@ -21,4 +21,5 @@ interface DetailComponent {
 interface ListComponent {
     val model: Value<List<Character>>
     fun onCharacterClicked(character: Character)
+    fun loadNextPage()
 }
