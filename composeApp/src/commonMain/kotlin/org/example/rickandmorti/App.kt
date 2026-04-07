@@ -1,19 +1,9 @@
 package org.example.rickandmorti
 
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewmodel.compose.viewModel
 import coil3.ImageLoader
 import coil3.PlatformContext
-import coil3.compose.AsyncImage
 import coil3.compose.setSingletonImageLoaderFactory
 import coil3.disk.DiskCache
 import coil3.memory.MemoryCache
@@ -21,16 +11,14 @@ import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import okio.FileSystem
-import org.example.rickandmorti.data.Character
 import org.example.rickandmorti.navigation.RootComponent
-import org.koin.compose.getKoin
-import org.koin.core.parameter.parametersOf
+import org.example.rickandmorti.screens.RootScreen
 
 @Composable
 fun App(rootComponent: RootComponent) {
     MaterialTheme {
 
-        RootComponent(rootComponent)
+        RootScreen(rootComponent)
 
         setSingletonImageLoaderFactory { context ->
             ImageLoader.Builder(context)

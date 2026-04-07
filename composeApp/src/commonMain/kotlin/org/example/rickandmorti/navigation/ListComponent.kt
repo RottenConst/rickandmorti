@@ -42,16 +42,19 @@ import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.snapshotFlow
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlin.compareTo
+import org.example.rickandmorti.FavoritesStore
 
 class DefaultListComponent(
     componentContext: ComponentContext,
-    private val characterClicked: (Character) -> Unit
+    private val characterClicked: (Character) -> Unit,
+    private val favoritesStore: FavoritesStore
 ): ListComponent, ComponentContext by componentContext, KoinComponent {
 
     private val _model = MutableValue<List<Character>>(emptyList())
     override val model: Value<List<Character>> = _model
+    override val favorites: Flow<Set<Int>> = favoritesStore.favoritesFlow
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
@@ -95,89 +98,12 @@ class DefaultListComponent(
             viewModel.loadNextPage()
         }
     }
-}
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun ListContent(
-    component: ListComponent,
-) {
-    val state by component.model.subscribeAsState()
-    val listState = rememberLazyListState()
-
-    var loadingMore by remember { mutableStateOf(false) }
-
-    // Создаем derived state для отслеживания условия прокрутки
-    val shouldLoadMore = remember {
-        derivedStateOf {
-            val totalItems = listState.layoutInfo.totalItemsCount
-            val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            !loadingMore && totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
-        }
-    }
-
-    // Отслеживаем изменение условия
-    LaunchedEffect(shouldLoadMore) {
-        snapshotFlow { shouldLoadMore.value }
-            .distinctUntilChanged()
-            .collect { loadMore ->
-                if (loadMore) {
-                    Logger.log("ListContent: Scrolled near end, loading more...")
-                    loadingMore = true
-                    component.loadNextPage()
-                }
-            }
-    }
-
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text("Characters") })
-        }
-    ) { paddingValues ->
-        LazyColumn(
-            state = listState,
-            modifier = Modifier.padding(paddingValues),
-        ) {
-            // Сообщение, если список пуст
-            if (state.isEmpty() && !loadingMore) {
-                item {
-                    Text(
-                        text = "No characters loaded.",
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .wrapContentSize()
-                            .padding(16.dp),
-                        color = Color.Red
-                    )
-                }
-            }
-
-            // Элементы списка
-            items(state) { character ->
-                ItemCharacter(
-                    character = character,
-                    onClick = { component.onCharacterClicked(character) }
-                )
-            }
-
-            // Индикатор загрузки
-            if (loadingMore) {
-                item {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .wrapContentSize()
-                    )
-                }
-            }
-        }
-    }
-
-    // Сброс флага после подгрузки
-    LaunchedEffect(state) {
-        if (state.isNotEmpty()) {
-            loadingMore = false
+    override fun toggleFavorite(character: Character) {
+        if (favoritesStore.isFavorite(character.id)) {
+            favoritesStore.removeFavorite(character.id)
+        } else {
+            favoritesStore.addFavorite(character.id)
         }
     }
 }

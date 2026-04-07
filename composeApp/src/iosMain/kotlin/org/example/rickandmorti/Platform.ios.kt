@@ -1,5 +1,7 @@
 package org.example.rickandmorti
 
+import com.russhwolf.settings.NSUserDefaultsSettings
+import com.russhwolf.settings.ObservableSettings
 import platform.Foundation.NSDate
 import platform.Foundation.timeIntervalSince1970
 import platform.UIKit.UIDevice
@@ -9,3 +11,5 @@ class IOSPlatform : Platform {
 }
 
 actual fun getPlatform(): Platform = IOSPlatform()
+actual fun createSettings(): ObservableSettings =
+    NSUserDefaultsSettings.Factory().create()

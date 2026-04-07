@@ -1,28 +1,24 @@
 package org.example.rickandmorti.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.Modifier
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.extensions.compose.stack.Children
-import com.arkivanov.decompose.extensions.compose.stack.animation.slide
-import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
 import com.arkivanov.decompose.router.stack.pushNew
 import com.arkivanov.decompose.value.Value
 import kotlinx.serialization.Serializable
-import kotlinx.serialization.encodeToString
-import kotlinx.serialization.json.Json
+import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.data.Character
-import org.example.rickandmorti.screens.items.ItemCharacter
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.inject
+import kotlin.getValue
 
 class DefaultRootComponent(
     componentContext: ComponentContext
-): RootComponent, ComponentContext by componentContext {
+): RootComponent, ComponentContext by componentContext, KoinComponent {
 
+    private val favoritesStore: FavoritesStore by inject()
     private val nav = StackNavigation<Config>()
 
     override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
@@ -40,6 +36,7 @@ class DefaultRootComponent(
         Config.List -> RootComponent.Child.List(
             DefaultListComponent(
                 componentContext = componentContext,
+                favoritesStore = favoritesStore,
                 characterClicked = { character ->
                     nav.pushNew(Config.Detail(character))
                 }
@@ -63,26 +60,5 @@ class DefaultRootComponent(
 
         @Serializable
         data class Detail(val character: Character) : Config
-    }
-}
-
-@Composable
-fun RootComponent(
-    component: RootComponent,
-) {
-    Children(
-        stack = component.stack,
-        modifier = Modifier,
-        animation = stackAnimation(slide())
-    ) {
-        when(val child = it.instance) {
-            is RootComponent.Child.Detail -> DetailScreen(
-                component = child.component
-            )
-
-            is RootComponent.Child.List -> ListContent(
-                component = child.component
-            )
-        }
     }
 }

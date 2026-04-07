@@ -86,6 +86,8 @@ kotlin {
             implementation(libs.decompose)
             implementation(libs.decompose.extensions.compose)
             implementation(libs.kotlinx.serialization.json)
+            implementation("com.russhwolf:multiplatform-settings:1.3.0")
+            implementation("com.russhwolf:multiplatform-settings-coroutines:1.3.0")
 
         }
         commonTest.dependencies {
@@ -98,6 +100,7 @@ kotlin {
             implementation(libs.ktor.client.java)
             implementation(libs.slf4j.simple)
             implementation(libs.coil.network.okhttp)
+            implementation("com.russhwolf:multiplatform-settings-jvm:1.3.0")
         }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)

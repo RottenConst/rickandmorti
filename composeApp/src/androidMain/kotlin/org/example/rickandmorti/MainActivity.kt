@@ -24,6 +24,8 @@ class MainActivity : ComponentActivity() {
             androidContext(this@MainActivity)
             modules(
                 module {
+                    val settings = createSettings()
+                    single<FavoritesStore> { SettingsFavoritesStore(settings) }
                     // Однократный экземпляр репозитория
                     single<GreetingRepository> { GreetingRepository() }
 
