@@ -47,7 +47,8 @@ class DefaultRootComponent(
             DefaultDetailComponent(
                 componentContext = componentContext,
                 character = config.character,
-                onFinished = { nav.pop() }
+                onFinished = { nav.pop() },
+                favoritesStore = favoritesStore
                 )
         )
     }

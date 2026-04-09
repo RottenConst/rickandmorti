@@ -21,6 +21,7 @@ import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowLeft
+import compose.icons.tablericons.Heart
 import org.example.rickandmorti.navigation.DetailComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -28,7 +29,10 @@ import org.example.rickandmorti.navigation.DetailComponent
 fun DetailScreen(
     component: DetailComponent,
 ) {
-    val state by component.model.subscribeAsState()
+    val character by component.model.subscribeAsState()
+    val favorites by component.favorites.subscribeAsState()
+
+    val isFavorite = favorites.contains(character.id)
 
     Scaffold(
         modifier = Modifier.padding(8.dp),
@@ -38,6 +42,15 @@ fun DetailScreen(
                 navigationIcon = {
                     IconButton(onClick = component::onBackPressed) {
                         Icon(imageVector = TablerIcons.ArrowLeft, contentDescription = "back")
+                    }
+                },
+                actions = {
+                    IconButton(onClick = { component.toggleFavorite(character) }) {
+                        Icon(
+                            imageVector = if (isFavorite) TablerIcons.Heart else TablerIcons.Heart,
+                            contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                            tint = MaterialTheme.colorScheme.error
+                        )
                     }
                 }
             )
@@ -49,7 +62,7 @@ fun DetailScreen(
             modifier = Modifier.padding(paddingValues).fillMaxSize()
         ) {
             AsyncImage(
-                model = state.image,
+                model = character.image,
                 contentDescription = "character image",
                 modifier = Modifier
                     .padding(top = 32.dp)
@@ -57,12 +70,12 @@ fun DetailScreen(
                 contentScale = ContentScale.Crop
             )
 
-            Text("Name: ${state.name}", style = MaterialTheme.typography.headlineMedium)
-            Text("Status: ${state.status}")
-            Text("Species: ${state.species}")
-            Text("Gender: ${state.gender}")
-            Text("Origin: ${state.origin.name}")
-            Text("Location: ${state.location.name}")
+            Text("Name: ${character.name}", style = MaterialTheme.typography.headlineMedium)
+            Text("Status: ${character.status}")
+            Text("Species: ${character.species}")
+            Text("Gender: ${character.gender}")
+            Text("Origin: ${character.origin.name}")
+            Text("Location: ${character.location.name}")
         }
 
     }

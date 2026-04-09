@@ -16,6 +16,8 @@ interface RootComponent {
 
 interface DetailComponent {
     val model: Value<Character>
+    val favorites: Value<Set<Int>>
+    fun toggleFavorite(character: Character)
     fun onBackPressed()
 }
 
