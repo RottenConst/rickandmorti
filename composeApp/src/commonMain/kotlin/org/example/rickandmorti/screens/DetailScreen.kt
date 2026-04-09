@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -15,6 +16,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
@@ -49,7 +51,7 @@ fun DetailScreen(
                         Icon(
                             imageVector = if (isFavorite) TablerIcons.Heart else TablerIcons.Heart,
                             contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                            tint = MaterialTheme.colorScheme.error
+                            tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(alpha = 0.5f)
                         )
                     }
                 }

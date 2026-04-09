@@ -39,7 +39,7 @@ fun ListScreen(
     val listState = rememberLazyListState()
 
     var loadingMore by remember { mutableStateOf(false) }
-
+    val title = if (component.isFavoritesOnly) "Favorites" else "Characters"
 
     // Создаем derived state для отслеживания условия прокрутки
     val shouldLoadMore = remember {
@@ -65,7 +65,7 @@ fun ListScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(title = { Text("Characters") })
+            TopAppBar(title = { Text(title) })
         }
     ) { paddingValues ->
         LazyColumn(
