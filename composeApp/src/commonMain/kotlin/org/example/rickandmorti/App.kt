@@ -11,8 +11,8 @@ import coil3.request.CachePolicy
 import coil3.request.crossfade
 import coil3.util.DebugLogger
 import okio.FileSystem
-import org.example.rickandmorti.navigation.RootComponent
-import org.example.rickandmorti.screens.RootScreen
+import org.example.rickandmorti.presentation.navigation.RootComponent
+import org.example.rickandmorti.presentation.screens.RootScreen
 
 @Composable
 fun App(rootComponent: RootComponent) {

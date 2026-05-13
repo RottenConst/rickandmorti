@@ -1,4 +1,4 @@
-package org.example.rickandmorti.navigation
+package org.example.rickandmorti.presentation.navigation
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
@@ -12,9 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.example.rickandmorti.GreetingViewModel
-import org.example.rickandmorti.Logger
-import org.example.rickandmorti.data.Character
+import org.example.rickandmorti.domain.model.Character
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
@@ -23,6 +21,8 @@ import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.FavoritesStore
+import org.example.rickandmorti.presentation.CharacterViewModel
+import org.example.rickandmorti.util.Logger
 import kotlin.collections.emptySet
 
 class DefaultListComponent(
@@ -43,18 +43,28 @@ class DefaultListComponent(
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
 
-    private val viewModel: GreetingViewModel = get<GreetingViewModel> {
-        parametersOf("Hello! KMP")
+    private val viewModel: CharacterViewModel = get<CharacterViewModel> {
+        parametersOf()
     }
 
     init {
         Logger.log("ListComponent: init started")
 
         // Слушаем изменения персонажей
-        viewModel.characters
-            .onEach { characters ->
-                Logger.log("Received ${characters.size} characters from Flow")
-                _allCharacters.update { characters }
+        viewModel.state
+            .onEach { state ->
+                when (state) {
+                    is CharacterViewModel.UiState.Success -> {
+                        Logger.log("Received ${state.characters.size} characters from Flow")
+                        _allCharacters.update { state.characters }
+                    }
+                    is CharacterViewModel.UiState.Loading -> {
+
+                    }
+                    is CharacterViewModel.UiState.Error -> {
+                    }
+                }
+
             }
             .launchIn(scope)
 
@@ -74,19 +84,11 @@ class DefaultListComponent(
             onCreate = {
                 Logger.log("ListComponent: onCreate")
                 scope.launch {
-                    viewModel.loadCharacters()
-                }
-                // Подписка на поток данных
-                scope.launch {
-                    viewModel.characters.collect { characters ->
-                        Logger.log("Received ${characters.size} characters from Flow")
-                        _allCharacters.update { characters }
-                    }
+                    viewModel.loadNextPage()
                 }
             },
             onDestroy = {
                 Logger.log("ListComponent: onDestroy")
-                viewModel.onDestroy()
                 scope.cancel()
             }
         )

@@ -1,4 +1,4 @@
-package org.example.rickandmorti.screens.items
+package org.example.rickandmorti.presentation.screens.items
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -26,7 +26,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import compose.icons.TablerIcons
 import compose.icons.tablericons.Heart
-import org.example.rickandmorti.data.Character
+import org.example.rickandmorti.domain.model.Character
 
 @Composable
 fun ItemCharacter(

@@ -1,4 +1,4 @@
-package org.example.rickandmorti.screens
+package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -8,9 +8,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -25,14 +23,15 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import kotlinx.coroutines.flow.distinctUntilChanged
-import org.example.rickandmorti.Logger
-import org.example.rickandmorti.navigation.ListComponent
-import org.example.rickandmorti.screens.items.ItemCharacter
+import org.example.rickandmorti.presentation.navigation.ListComponent
+import org.example.rickandmorti.presentation.screens.items.ItemCharacter
+import org.example.rickandmorti.util.Logger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
     component: ListComponent,
+    modifier: Modifier = Modifier,
 ) {
     val state by component.model.subscribeAsState()
     val favorites by component.favorites.collectAsState(initial = emptySet())
@@ -63,14 +62,10 @@ fun ListScreen(
             }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(title = { Text(title) })
-        }
-    ) { paddingValues ->
+
         LazyColumn(
             state = listState,
-            modifier = Modifier.padding(paddingValues),
+            modifier = modifier.fillMaxSize(),
         ) {
             // Сообщение, если список пуст
             if (state.isEmpty() && !loadingMore) {
@@ -108,7 +103,6 @@ fun ListScreen(
                 }
             }
         }
-    }
 
     // Сброс флага после подгрузки
     LaunchedEffect(state) {

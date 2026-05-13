@@ -1,4 +1,4 @@
-package org.example.rickandmorti.navigation
+package org.example.rickandmorti.presentation.navigation
 
 import com.arkivanov.decompose.ComponentContext
 import com.arkivanov.decompose.value.MutableValue
@@ -10,7 +10,7 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.FavoritesStore
-import org.example.rickandmorti.data.Character
+import org.example.rickandmorti.domain.model.Character
 import kotlin.collections.emptySet
 
 class DefaultDetailComponent(

@@ -1,4 +1,4 @@
-package org.example.rickandmorti.screens
+package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.animation.animateColorAsState
 import androidx.compose.foundation.background
@@ -13,10 +13,16 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.LocalContentColor
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -24,9 +30,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.arkivanov.decompose.extensions.compose.stack.Children
@@ -34,23 +42,73 @@ import com.arkivanov.decompose.extensions.compose.stack.animation.slide
 import com.arkivanov.decompose.extensions.compose.stack.animation.stackAnimation
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import compose.icons.TablerIcons
+import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.Heart
 import compose.icons.tablericons.Home
-import org.example.rickandmorti.navigation.RootComponent
+import org.example.rickandmorti.presentation.navigation.RootComponent
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RootScreen(
     component: RootComponent,
 ) {
     val activeTab by component.activeTab.subscribeAsState()
+    val canGoBack by component.canGoBack.subscribeAsState()
+
+    val child by component.stack.subscribeAsState()
+    val activeChild = child.active.instance
+
+    val titleText: String by remember(activeChild, activeTab) {
+        derivedStateOf {
+            when (activeChild) {
+                is RootComponent.Child.Detail -> activeChild.component.model.value.name
+                else -> when (activeTab) {
+                    RootComponent.Tab.LIST -> "Characters"
+                    RootComponent.Tab.FAVORITES -> "Favorites"
+                }
+            }
+        }
+    }
 
     Scaffold(
-        bottomBar = {
-            CustomBottomBar(
-                tabs = RootComponent.Tab.entries.toTypedArray(),
-                selectedTab = activeTab,
-                onTabSelected = component::onTabSelected,
+        topBar = {
+            TopAppBar(
+                title = { Text(text = titleText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
+                navigationIcon = {
+                    if (canGoBack) {
+                        IconButton(onClick = { component.goBack() }) {
+                            Icon(imageVector = TablerIcons.ArrowLeft, contentDescription = "Back")
+                        }
+                    }
+                },
+                actions = {
+                    // Показываем сердце только если активен Detail
+                    if (activeChild is RootComponent.Child.Detail) {
+                        val character = activeChild.component.model.value
+                        val favorites by activeChild.component.favorites.subscribeAsState()
+                        val isFavorite = favorites.contains(character.id)
+
+                        IconButton(
+                            onClick = { activeChild.component.toggleFavorite(character) }
+                        ) {
+                            Icon(
+                                imageVector = TablerIcons.Heart,
+                                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(alpha = 0.5f)
+                            )
+                        }
+                    }
+                }
             )
+        },
+        bottomBar = {
+            if (component.stack.value.active.instance !is RootComponent.Child.Detail) {
+                CustomBottomBar(
+                    tabs = RootComponent.Tab.entries.toTypedArray(),
+                    selectedTab = activeTab,
+                    onTabSelected = component::onTabSelected,
+                )
+            }
         }
     ) { paddingValues ->
         Children(
@@ -93,20 +151,20 @@ private fun CustomBottomBar(
 
             // Цвет иконки и текста
             val targetColor = if (tab == selectedTab) {
-                androidx.compose.material3.MaterialTheme.colorScheme.primary
+                MaterialTheme.colorScheme.primary
             } else if (isHovered) {
-                androidx.compose.material3.MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
             } else {
-                androidx.compose.material3.MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
             }
             val animatedColor by animateColorAsState(targetValue = targetColor, label = "bottom_bar_icon_color")
 
             // Фон при активной вкладке или наведении
             val backgroundColor by animateColorAsState(
                 targetValue = when {
-                    tab == selectedTab -> androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer
-                    isHovered -> androidx.compose.material3.MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
-                    else -> androidx.compose.ui.graphics.Color.Transparent
+                    tab == selectedTab -> MaterialTheme.colorScheme.primaryContainer
+                    isHovered -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+                    else -> Color.Transparent
                 },
                 label = "bottom_bar_bg"
             )

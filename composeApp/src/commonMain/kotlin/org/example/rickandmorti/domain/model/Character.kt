@@ -1,4 +1,4 @@
-package org.example.rickandmorti.data
+package org.example.rickandmorti.domain.model
 
 import kotlinx.serialization.Serializable
 

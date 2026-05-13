@@ -9,7 +9,8 @@ import com.arkivanov.decompose.defaultComponentContext
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
-import org.example.rickandmorti.navigation.DefaultRootComponent
+import org.example.rickandmorti.shared.AppModules
+import org.example.rickandmorti.presentation.navigation.DefaultRootComponent
 import org.koin.android.ext.koin.androidContext
 import org.koin.core.context.GlobalContext.startKoin
 import org.koin.core.qualifier.named
@@ -26,22 +27,12 @@ class MainActivity : ComponentActivity() {
                 module {
                     val settings = createSettings()
                     single<FavoritesStore> { SettingsFavoritesStore(settings) }
-                    // Однократный экземпляр репозитория
-                    single<GreetingRepository> { GreetingRepository() }
 
                     // Фабрика для создания CoroutineScope (на каждый запрос — новый scope)
                     factory(named("ViewModelScope")) {
                         CoroutineScope(SupervisorJob() + Dispatchers.Main)
                     }
-
-                    // Фабрика GreetingViewModel с тремя параметрами
-                    factory { (initialGreeting: String) ->
-                        GreetingViewModel(
-                            greetingRepository = get(),
-                            coroutineScope = get(named("ViewModelScope")),
-                            initialGreeting = initialGreeting
-                        )
-                    }
+                    modules(AppModules.all())
                 }
             )
         }
