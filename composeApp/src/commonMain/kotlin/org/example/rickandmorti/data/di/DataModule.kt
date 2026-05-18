@@ -7,6 +7,7 @@ import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.example.rickandmorti.data.api.RickAndMortyApi
 import org.example.rickandmorti.data.source.CharacterDataSource
+import org.example.rickandmorti.data.source.EpisodeDataSource
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
@@ -35,4 +36,5 @@ val dataModule = module {
     single { RickAndMortyApi(get()) }
 
     singleOf(::CharacterDataSource)
+    singleOf(::EpisodeDataSource)
 }

@@ -4,6 +4,7 @@ import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.value.Value
 import kotlinx.coroutines.flow.Flow
 import org.example.rickandmorti.domain.model.Character
+import org.example.rickandmorti.domain.model.Episode
 
 interface RootComponent {
     val stack: Value<ChildStack<*, Child>>
@@ -31,7 +32,9 @@ interface RootComponent {
 }
 
 interface DetailComponent {
-    val model: Value<Character>
+    val character: Value<Character>
+    val episodes: Value<List<Episode>>
+    val isEpisodeLoading: Value<Boolean>
     val favorites: Value<Set<Int>>
     fun toggleFavorite(character: Character)
     fun onBackPressed()

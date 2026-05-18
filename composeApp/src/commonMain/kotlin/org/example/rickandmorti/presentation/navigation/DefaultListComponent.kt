@@ -51,17 +51,17 @@ class DefaultListComponent(
         Logger.log("ListComponent: init started")
 
         // Слушаем изменения персонажей
-        viewModel.state
+        viewModel.stateCharacter
             .onEach { state ->
                 when (state) {
-                    is CharacterViewModel.UiState.Success -> {
+                    is CharacterViewModel.UiStateCharacter.Success -> {
                         Logger.log("Received ${state.characters.size} characters from Flow")
                         _allCharacters.update { state.characters }
                     }
-                    is CharacterViewModel.UiState.Loading -> {
+                    is CharacterViewModel.UiStateCharacter.Loading -> {
 
                     }
-                    is CharacterViewModel.UiState.Error -> {
+                    is CharacterViewModel.UiStateCharacter.Error -> {
                     }
                 }
 

@@ -61,7 +61,7 @@ fun RootScreen(
     val titleText: String by remember(activeChild, activeTab) {
         derivedStateOf {
             when (activeChild) {
-                is RootComponent.Child.Detail -> activeChild.component.model.value.name
+                is RootComponent.Child.Detail -> activeChild.component.character.value.name
                 else -> when (activeTab) {
                     RootComponent.Tab.LIST -> "Characters"
                     RootComponent.Tab.FAVORITES -> "Favorites"
@@ -84,7 +84,7 @@ fun RootScreen(
                 actions = {
                     // Показываем сердце только если активен Detail
                     if (activeChild is RootComponent.Child.Detail) {
-                        val character = activeChild.component.model.value
+                        val character = activeChild.component.character.value
                         val favorites by activeChild.component.favorites.subscribeAsState()
                         val isFavorite = favorites.contains(character.id)
 

@@ -11,6 +11,12 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
+import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.presentation.CharacterViewModel
+import org.example.rickandmorti.util.Logger
+import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
+import org.koin.core.parameter.parametersOf
 import kotlin.collections.emptySet
 
 class DefaultDetailComponent(
@@ -18,22 +24,52 @@ class DefaultDetailComponent(
     character: Character,
     private val onFinished: () -> Unit,
     private val favoritesStore: FavoritesStore
-): DetailComponent, ComponentContext by componentContext {
+): DetailComponent, ComponentContext by componentContext, KoinComponent {
 
-    override val model: Value<Character> = MutableValue(character)
+    override val character: Value<Character> = MutableValue(character)
+
+    private val _episodes = MutableValue<List<Episode>>(emptyList())
+    override val episodes: Value<List<Episode>> = _episodes
+
+    private val _isEpisodeLoading = MutableValue(true)
+    override val isEpisodeLoading: Value<Boolean> = _isEpisodeLoading
     private val _favorites = MutableValue<Set<Int>>(emptySet())
     override val favorites: Value<Set<Int>> = _favorites
 
     private val scope = CoroutineScope(SupervisorJob())
 
+    private val viewModel: CharacterViewModel = get<CharacterViewModel> {
+        parametersOf()
+    }
+
     init {
+        Logger.log("🔍 DefaultDetailComponent: character.episodes = ${character.episode}")
+        viewModel.loadEpisodes(character.episode)
+
+        viewModel.stateEpisode
+            .onEach { state ->
+                when (state) {
+                    is CharacterViewModel.UiStateEpisode.Loading -> {
+                        _isEpisodeLoading.value = true
+                    }
+                    is CharacterViewModel.UiStateEpisode.Success -> {
+                        Logger.log("loaded episod ${state.episodes.size}")
+                        _episodes.value = state.episodes
+                        _isEpisodeLoading.value = false
+                    }
+                    is CharacterViewModel.UiStateEpisode.Error -> {
+                        _isEpisodeLoading.value = false
+                    }
+                }
+            }
+            .launchIn(scope)
+
         favoritesStore.favoritesFlow
             .onEach { set ->
                 _favorites.value = set
             }
             .launchIn(scope)
 
-        // Правильный способ: используем doOnDestroy
         lifecycle.doOnDestroy {
             scope.cancel()
         }

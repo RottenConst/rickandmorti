@@ -1,12 +1,11 @@
 package org.example.rickandmorti.data
 
 import kotlinx.serialization.Serializable
-import org.example.rickandmorti.data.dto.CharacterDto
 
 @Serializable
-data class CharacterResponse(
+data class Response<T>(
     val info: Info,
-    val results: List<CharacterDto>
+    val results: List<T>
 )
 
 @Serializable
