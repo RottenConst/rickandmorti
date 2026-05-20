@@ -6,15 +6,19 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
 import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
 import org.example.rickandmorti.domain.usecase.GetEpisodeByUrlUseCase
+import org.example.rickandmorti.domain.usecase.GetEpisodeUseCase
 import org.example.rickandmorti.util.Logger
 import org.example.rickandmorti.util.NetworkResult
 import org.koin.core.component.KoinComponent
 
 class CharacterViewModel(
     private val getCharactersUseCase: GetCharactersUseCase,
-    private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase
+    private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase,
+    private val getEpisodeUseCase: GetEpisodeUseCase,
+    private val getCharacterByUrlUseCase: GetCharacterByUrlUseCase
 ) : BaseViewModel(), KoinComponent {
     private val _stateCharacter = MutableStateFlow<UiStateCharacter>(UiStateCharacter.Loading)
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter
@@ -23,16 +27,17 @@ class CharacterViewModel(
     val stateEpisode: StateFlow<UiStateEpisode> = _stateEpisode
 
     private var currentPage = 1
+    private var currentPageEpisode = 1
     private var isLoading = false
 
     private var isLoadingEpisode = false
     private var hasMorePages = true
 
     init {
-        loadNextPage()
+        loadedAllCharacters()
     }
 
-    fun loadNextPage(){
+    fun loadedAllCharacters(){
         if (isLoading || !hasMorePages) return
         isLoading = true
 
@@ -61,23 +66,71 @@ class CharacterViewModel(
         }
     }
 
+    fun loadedCharacter(urls: List<String>) {
+        if (isLoadingEpisode) return
+        isLoadingEpisode = true
+        _stateCharacter.value = UiStateCharacter.Loading
+
+        viewModelScope.launch {
+            val characters = mutableListOf<Character>()
+            for ((index, url) in urls.withIndex()) {
+                when (val result = getCharacterByUrlUseCase(url)) {
+                    is NetworkResult.Success -> characters.add(result.data)
+                    is NetworkResult.Error -> {}
+                }
+                if (index + 1 % 10 == 0) {
+                    delay(5000)
+                }
+            }
+            _stateCharacter.value = UiStateCharacter.Success(characters)
+            isLoadingEpisode = false
+        }
+    }
+
+    fun loadAllEpisodes() {
+        if (isLoading || !hasMorePages) return
+        isLoading = true
+
+        viewModelScope.launch {
+            delay(300)
+            when (val result = getEpisodeUseCase(currentPageEpisode)){
+                is NetworkResult.Success -> {
+                    val newEpisodes = result.data
+                    if (newEpisodes.isNotEmpty()) {
+                        val currentList = (_stateEpisode.value as? UiStateEpisode.Success)?.episodes.orEmpty()
+                        _stateEpisode.value = UiStateEpisode.Success(currentList + newEpisodes)
+                        currentPageEpisode++
+                        Logger.log(message = "VM: loaded ${newEpisodes.size} episods, total: ${currentList.size + newEpisodes.size}")
+                    }
+                }
+
+                is NetworkResult.Error -> {
+                    _stateEpisode.value = UiStateEpisode.Error(result.exception.message ?: "Unknown error")
+                    hasMorePages = false
+                    Logger.log("VM Error: ${result.exception.message}")
+                }
+            }
+            isLoading = false
+        }
+    }
+
     fun loadEpisodes(urls: List<String>) {
         if (isLoadingEpisode) return
         isLoadingEpisode = true
         _stateEpisode.value = UiStateEpisode.Loading
 
         viewModelScope.launch {
-            val names = mutableListOf<Episode>()
+            val episodes = mutableListOf<Episode>()
             for ((index, url) in urls.withIndex()) {
                 when (val result = getEpisodeByUrlUseCase(url)) {
-                    is NetworkResult.Success -> names.add(result.data)
+                    is NetworkResult.Success -> episodes.add(result.data)
                     is NetworkResult.Error -> {}
                 }
                 if ((index + 1) % 10 == 0) {
                     delay(5000)
                 }
             }
-            _stateEpisode.value = UiStateEpisode.Success(names)
+            _stateEpisode.value = UiStateEpisode.Success(episodes)
             isLoadingEpisode = false
         }
     }
@@ -85,7 +138,7 @@ class CharacterViewModel(
     fun refresh() {
         currentPage = 1
         hasMorePages = true
-        loadNextPage()
+        loadedAllCharacters()
     }
 
     sealed class UiStateCharacter {

@@ -17,8 +17,7 @@ class GetEpisodeByUrlUseCase(
 
     private suspend fun invokeById(id: Int): NetworkResult<Episode> {
         return try {
-            val episodeDto = repository.getEpisode(id)
-            when (episodeDto) {
+            when (val episodeDto = repository.getEpisode(id)) {
                 is NetworkResult.Success -> {
                     Logger.log("🔍 GetEpisodeByUrlUseCase: id ${episodeDto.data}")
                     NetworkResult.Success(episodeDto.data)

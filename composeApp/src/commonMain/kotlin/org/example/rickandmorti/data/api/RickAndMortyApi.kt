@@ -25,6 +25,10 @@ class RickAndMortyApi(private val client: HttpClient) {
         }.body<Response<EpisodeDto>>().results
     }
 
+    suspend fun getCharacter(id: Int): CharacterDto {
+        return client.get("/api/character/$id").body()
+    }
+
     suspend fun getEpisode(id: Int): EpisodeDto {
         return client.get("/api/episode/$id").body()
     }

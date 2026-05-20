@@ -23,22 +23,21 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import kotlinx.coroutines.flow.distinctUntilChanged
-import org.example.rickandmorti.presentation.navigation.ListComponent
+import org.example.rickandmorti.presentation.navigation.CharacterListComponent
 import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.util.Logger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
-    component: ListComponent,
+    component: CharacterListComponent,
     modifier: Modifier = Modifier,
 ) {
-    val state by component.model.subscribeAsState()
+    val state by component.characters.subscribeAsState()
     val favorites by component.favorites.collectAsState(initial = emptySet())
     val listState = rememberLazyListState()
 
     var loadingMore by remember { mutableStateOf(false) }
-    val title = if (component.isFavoritesOnly) "Favorites" else "Characters"
 
     // Создаем derived state для отслеживания условия прокрутки
     val shouldLoadMore = remember {

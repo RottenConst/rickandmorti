@@ -19,4 +19,13 @@ class CharacterDataSource(
             NetworkResult.Error(e)
         }
     }
+
+    suspend fun getCharacter(id: Int): NetworkResult<CharacterDto> {
+        return try {
+            val characterDto = api.getCharacter(id)
+            NetworkResult.Success(characterDto)
+        }catch (e: Exception) {
+            NetworkResult.Error(e)
+        }
+    }
 }

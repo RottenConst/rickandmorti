@@ -14,6 +14,10 @@ class CharacterRepositoryImpl(
             dtoList.map { it.toDomain() }
         }
     }
+
+    override suspend fun getCharacter(id: Int): NetworkResult<Character> {
+        return dataSource.getCharacter(id).map { it.toDomain() }
+    }
 }
 
 // Помогаем NetworkResult преобразовать тип

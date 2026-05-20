@@ -12,7 +12,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -45,6 +45,7 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.Heart
 import compose.icons.tablericons.Home
+import compose.icons.tablericons.List
 import org.example.rickandmorti.presentation.navigation.RootComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -61,10 +62,12 @@ fun RootScreen(
     val titleText: String by remember(activeChild, activeTab) {
         derivedStateOf {
             when (activeChild) {
-                is RootComponent.Child.Detail -> activeChild.component.character.value.name
+                is RootComponent.Child.DetailCharacter -> activeChild.component.character.value.name
+                is RootComponent.Child.DetailEpisode -> activeChild.component.episode.value.name
                 else -> when (activeTab) {
-                    RootComponent.Tab.LIST -> "Characters"
+                    RootComponent.Tab.CHARACTERS -> "Characters"
                     RootComponent.Tab.FAVORITES -> "Favorites"
+                    RootComponent.Tab.EPISODES -> "Episodes"
                 }
             }
         }
@@ -83,7 +86,7 @@ fun RootScreen(
                 },
                 actions = {
                     // Показываем сердце только если активен Detail
-                    if (activeChild is RootComponent.Child.Detail) {
+                    if ((activeChild is RootComponent.Child.DetailCharacter) ) {
                         val character = activeChild.component.character.value
                         val favorites by activeChild.component.favorites.subscribeAsState()
                         val isFavorite = favorites.contains(character.id)
@@ -102,7 +105,7 @@ fun RootScreen(
             )
         },
         bottomBar = {
-            if (component.stack.value.active.instance !is RootComponent.Child.Detail) {
+            if (component.stack.value.active.instance !is RootComponent.Child.DetailCharacter) {
                 CustomBottomBar(
                     tabs = RootComponent.Tab.entries.toTypedArray(),
                     selectedTab = activeTab,
@@ -117,9 +120,11 @@ fun RootScreen(
             animation = stackAnimation(slide())
         ) { child ->
             when (val instance = child.instance) {
-                is RootComponent.Child.Detail -> DetailScreen(component = instance.component)
-                is RootComponent.Child.List -> ListScreen(component = instance.component)
+                is RootComponent.Child.DetailCharacter -> CharacterDetailScreen(component = instance.component)
+                is RootComponent.Child.DetailEpisode -> EpisodeDetailScreen(component = instance.component)
+                is RootComponent.Child.Characters -> ListScreen(component = instance.component)
                 is RootComponent.Child.Favorites -> ListScreen(component = instance.component)
+                is RootComponent.Child.Episodes -> EpisodeListScreen(component = instance.component)
             }
         }
     }
@@ -142,8 +147,9 @@ private fun CustomBottomBar(
     ) {
         tabs.forEach { tab ->
             val icon = when (tab) {
-                RootComponent.Tab.LIST -> TablerIcons.Home
+                RootComponent.Tab.CHARACTERS -> TablerIcons.Home
                 RootComponent.Tab.FAVORITES -> TablerIcons.Heart
+                RootComponent.Tab.EPISODES -> TablerIcons.List
             }
 
             var isHovered by remember { mutableStateOf(false) }
@@ -172,7 +178,7 @@ private fun CustomBottomBar(
             Box(
                 modifier = Modifier
                     .weight(1f)
-                    .clip(RoundedCornerShape(16.dp))
+                    .clip(CircleShape)
                     .then(
                         if (tab == selectedTab || isHovered) {
                             Modifier

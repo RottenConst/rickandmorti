@@ -23,13 +23,13 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
-import org.example.rickandmorti.presentation.navigation.DetailComponent
+import org.example.rickandmorti.presentation.navigation.DetailCharacterComponent
 import org.example.rickandmorti.util.Logger
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun DetailScreen(
-    component: DetailComponent,
+fun CharacterDetailScreen(
+    component: DetailCharacterComponent,
     modifier: Modifier = Modifier
 ) {
     val character by component.character.subscribeAsState()

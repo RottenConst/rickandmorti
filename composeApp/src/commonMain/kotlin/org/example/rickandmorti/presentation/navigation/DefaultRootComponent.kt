@@ -14,6 +14,7 @@ import com.arkivanov.decompose.value.operator.map
 import kotlinx.serialization.Serializable
 import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
+import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.util.distinctUntilChanged
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -25,12 +26,12 @@ class DefaultRootComponent(
 
     private val favoritesStore: FavoritesStore by inject()
     private val navigation = StackNavigation<Config>()
-    private val _activeTab = MutableValue(RootComponent.Tab.LIST)
+    private val _activeTab = MutableValue(RootComponent.Tab.CHARACTERS)
     override val activeTab: Value<RootComponent.Tab> = _activeTab
     override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
         serializer = Config.serializer(),
-        initialConfiguration = Config.List,
+        initialConfiguration = Config.CharacterList,
         handleBackButton = true,
         childFactory = ::createChild
     )
@@ -39,8 +40,9 @@ class DefaultRootComponent(
     override fun onTabSelected(tab: RootComponent.Tab) {
         _activeTab.value = tab // Сохраняем активную вкладку
         when (tab) {
-            RootComponent.Tab.LIST -> navigation.replaceAll(Config.List)
-            RootComponent.Tab.FAVORITES -> navigation.replaceAll(Config.Favorites)
+            RootComponent.Tab.CHARACTERS -> navigation.replaceAll(Config.CharacterList)
+            RootComponent.Tab.FAVORITES -> navigation.replaceAll(Config.CharacterFavorites)
+            RootComponent.Tab.EPISODES -> navigation.replaceAll(Config.EpisodesList)
         }
     }
 
@@ -53,8 +55,8 @@ class DefaultRootComponent(
         config: Config,
         componentContext: ComponentContext
     ): RootComponent.Child = when (config) {
-        Config.List -> RootComponent.Child.List(
-            DefaultListComponent(
+        Config.CharacterList -> RootComponent.Child.Characters(
+            DefaultCharacterListComponent(
                 componentContext = componentContext,
                 favoritesStore = favoritesStore,
                 isFavoritesOnly = false,
@@ -64,8 +66,8 @@ class DefaultRootComponent(
             )
         )
 
-        Config.Favorites -> RootComponent.Child.Favorites(
-            DefaultListComponent(
+        Config.CharacterFavorites -> RootComponent.Child.Favorites(
+            DefaultCharacterListComponent(
                 componentContext = componentContext,
                 favoritesStore = favoritesStore,
                 isFavoritesOnly = true,
@@ -75,26 +77,49 @@ class DefaultRootComponent(
             )
         )
 
-        is Config.Detail -> RootComponent.Child.Detail(
-            DefaultDetailComponent(
+        is Config.Detail -> RootComponent.Child.DetailCharacter(
+            DefaultDetailCharacterComponent(
                 componentContext = componentContext,
                 character = config.character,
                 onFinished = { navigation.pop() },
                 favoritesStore = favoritesStore
             )
         )
+
+
+        Config.EpisodesList -> RootComponent.Child.Episodes(
+            DefaultEpisodeListComponent(
+                componentContext = componentContext,
+                episodeClicked = { episode ->
+                    navigation.push(Config.DetailEpisode(episode))
+                }
+            )
+        )
+
+        is Config.DetailEpisode -> RootComponent.Child.DetailEpisode(
+            DefaultDetailEpisodeComponent(
+                componentContext = componentContext,
+                episode = config.episode,
+                onFinished = { navigation.pop() }
+            )
+        )
     }
 
 
     @Serializable
-    private sealed interface Config { // 6
+    private sealed interface Config {
         @Serializable
-        data object List : Config
+        data object CharacterList : Config
 
         @Serializable
-        data object Favorites: Config
+        data object CharacterFavorites: Config
 
+        @Serializable
+        data object EpisodesList: Config
         @Serializable
         data class Detail(val character: Character) : Config
+
+        @Serializable
+        data class DetailEpisode(val episode: Episode): Config
     }
 }

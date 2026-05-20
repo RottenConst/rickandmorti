@@ -4,8 +4,10 @@ import org.example.rickandmorti.data.repository.CharacterRepositoryImpl
 import org.example.rickandmorti.data.repository.EpisodeRepositoryImpl
 import org.example.rickandmorti.domain.repository.CharacterRepository
 import org.example.rickandmorti.domain.repository.EpisodeRepository
+import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
 import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
 import org.example.rickandmorti.domain.usecase.GetEpisodeByUrlUseCase
+import org.example.rickandmorti.domain.usecase.GetEpisodeUseCase
 import org.koin.core.module.dsl.bind
 import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
@@ -21,4 +23,6 @@ val domainModule = module {
 
     singleOf(::GetCharactersUseCase)
     singleOf(::GetEpisodeByUrlUseCase)
+    singleOf(::GetCharacterByUrlUseCase)
+    singleOf(::GetEpisodeUseCase)
 }

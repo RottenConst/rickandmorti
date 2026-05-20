@@ -19,12 +19,12 @@ import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
 import kotlin.collections.emptySet
 
-class DefaultDetailComponent(
+class DefaultDetailCharacterComponent(
     componentContext: ComponentContext,
     character: Character,
     private val onFinished: () -> Unit,
     private val favoritesStore: FavoritesStore
-): DetailComponent, ComponentContext by componentContext, KoinComponent {
+): DetailCharacterComponent, ComponentContext by componentContext, KoinComponent {
 
     override val character: Value<Character> = MutableValue(character)
 

@@ -25,17 +25,17 @@ import org.example.rickandmorti.presentation.CharacterViewModel
 import org.example.rickandmorti.util.Logger
 import kotlin.collections.emptySet
 
-class DefaultListComponent(
+class DefaultCharacterListComponent(
     componentContext: ComponentContext,
     private val characterClicked: (Character) -> Unit,
     override val isFavoritesOnly: Boolean = false,
     private val favoritesStore: FavoritesStore
-): ListComponent, ComponentContext by componentContext, KoinComponent {
+): CharacterListComponent, ComponentContext by componentContext, KoinComponent {
 
     private val _allCharacters = MutableValue<List<Character>>(emptyList())
     private val _filteredCharacters = MutableValue<List<Character>>(emptyList())
 
-    override val model: Value<List<Character>> = _filteredCharacters
+    override val characters: Value<List<Character>> = _filteredCharacters
 
     override val favorites: Flow<Set<Int>> = favoritesStore.favoritesFlow
     private var currentFavorites: Set<Int> = emptySet()
@@ -84,7 +84,7 @@ class DefaultListComponent(
             onCreate = {
                 Logger.log("ListComponent: onCreate")
                 scope.launch {
-                    viewModel.loadNextPage()
+                    viewModel.loadedAllCharacters()
                 }
             },
             onDestroy = {
@@ -112,7 +112,7 @@ class DefaultListComponent(
         loadMoreJob = scope.launch {
             // Небольшая задержка, чтобы избежать множественных вызовов
             delay(100)
-            viewModel.loadNextPage()
+            viewModel.loadedAllCharacters()
         }
     }
 
