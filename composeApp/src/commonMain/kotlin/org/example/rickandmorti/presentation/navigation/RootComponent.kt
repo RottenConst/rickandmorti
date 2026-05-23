@@ -39,6 +39,7 @@ interface DetailCharacterComponent {
     val episodes: Value<List<Episode>>
     val isEpisodeLoading: Value<Boolean>
     val favorites: Value<Set<Int>>
+    fun onEpisodeClicked(episode: Episode)
     fun toggleFavorite(character: Character)
     fun onBackPressed()
 }
@@ -47,6 +48,7 @@ interface DetailEpisodeComponent {
     val episode: Value<Episode>
     val characters: Value<List<Character>>
     val isCharactersLoading: Value<Boolean>
+    fun onCharacterClicked(character: Character)
     fun onBackPressed()
 }
 

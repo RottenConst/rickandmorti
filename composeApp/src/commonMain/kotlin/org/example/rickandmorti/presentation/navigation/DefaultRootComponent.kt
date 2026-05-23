@@ -82,7 +82,10 @@ class DefaultRootComponent(
                 componentContext = componentContext,
                 character = config.character,
                 onFinished = { navigation.pop() },
-                favoritesStore = favoritesStore
+                favoritesStore = favoritesStore,
+                episodeClicked = { episode ->
+                    navigation.push(Config.DetailEpisode(episode))
+                }
             )
         )
 
@@ -100,7 +103,10 @@ class DefaultRootComponent(
             DefaultDetailEpisodeComponent(
                 componentContext = componentContext,
                 episode = config.episode,
-                onFinished = { navigation.pop() }
+                onFinished = { navigation.pop() },
+                characterClicked = { character ->
+                    navigation.push(Config.Detail(character))
+                }
             )
         )
     }

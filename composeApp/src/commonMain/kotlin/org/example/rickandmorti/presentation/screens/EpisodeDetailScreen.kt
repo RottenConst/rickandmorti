@@ -19,6 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.example.rickandmorti.presentation.navigation.DetailEpisodeComponent
+import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.util.Logger
 
 @Composable
@@ -84,9 +85,12 @@ fun EpisodeDetailScreen(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             items(characters) { character ->
-                                Column(modifier.padding(8.dp)) {
-                                    Text("- ${character.name}")
-                                }
+                                ItemCharacter(
+                                    character = character,
+                                    isFavorite = false,
+                                    onToggleFavorite = {},
+                                    onClick = ({component.onCharacterClicked(character)})
+                                )
                             }
                         }
                     }

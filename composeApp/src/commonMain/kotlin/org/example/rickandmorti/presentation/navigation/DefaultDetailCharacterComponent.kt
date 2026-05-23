@@ -22,6 +22,7 @@ import kotlin.collections.emptySet
 class DefaultDetailCharacterComponent(
     componentContext: ComponentContext,
     character: Character,
+    private val episodeClicked: (Episode) -> Unit,
     private val onFinished: () -> Unit,
     private val favoritesStore: FavoritesStore
 ): DetailCharacterComponent, ComponentContext by componentContext, KoinComponent {
@@ -74,6 +75,8 @@ class DefaultDetailCharacterComponent(
             scope.cancel()
         }
     }
+
+    override fun onEpisodeClicked(episode: Episode) = episodeClicked(episode)
 
     override fun toggleFavorite(character: Character) {
         if (favoritesStore.isFavorite(character.id)) {

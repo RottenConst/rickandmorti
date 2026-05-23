@@ -20,6 +20,7 @@ import org.koin.core.parameter.parametersOf
 class DefaultDetailEpisodeComponent(
     componentContext: ComponentContext,
     episode: Episode,
+    private val characterClicked: (Character) -> Unit,
     private val onFinished: () -> Unit
 ): DetailEpisodeComponent, ComponentContext by componentContext, KoinComponent {
 
@@ -62,6 +63,8 @@ class DefaultDetailEpisodeComponent(
             scope.cancel()
         }
     }
+
+    override fun onCharacterClicked(character: Character) = characterClicked(character)
 
     override fun onBackPressed() = onFinished()
 }

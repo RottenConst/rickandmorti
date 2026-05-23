@@ -24,6 +24,7 @@ import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.example.rickandmorti.presentation.navigation.DetailCharacterComponent
+import org.example.rickandmorti.presentation.screens.items.ItemEpisode
 import org.example.rickandmorti.util.Logger
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -103,7 +104,10 @@ fun CharacterDetailScreen(
                         items(episodes) { episode ->
 
                             Column(modifier.padding(8.dp)) {
-                                Text("• ${episode.name}")
+                                ItemEpisode(
+                                    episode = episode,
+                                    onClick = { component.onEpisodeClicked(episode) }
+                                )
                             }
                         }
                     }
