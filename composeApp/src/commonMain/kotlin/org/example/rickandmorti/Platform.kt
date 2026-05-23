@@ -8,4 +8,6 @@ interface Platform {
 
 expect fun getPlatform(): Platform
 
+expect fun openInBrowser(url :String)
+
 expect fun createSettings(): ObservableSettings

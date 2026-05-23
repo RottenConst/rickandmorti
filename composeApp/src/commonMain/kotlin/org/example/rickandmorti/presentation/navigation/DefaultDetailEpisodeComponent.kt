@@ -11,6 +11,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.openInBrowser
 import org.example.rickandmorti.presentation.CharacterViewModel
 import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
@@ -65,6 +66,15 @@ class DefaultDetailEpisodeComponent(
     }
 
     override fun onCharacterClicked(character: Character) = characterClicked(character)
+
+    override fun openEpisodeWatchPage() {
+        val episodeCode = episode.value.episode // или используем episode.value.episode ("S04E19")
+        val season = episodeCode.substring(1, 3).toIntOrNull() ?: return
+        val episodeNumber = episodeCode.substring(4).toIntOrNull() ?: return
+        val watchUrl = "https://rick-i-morty.com/episodes/${season}sez-${episodeNumber}seriya/"
+
+        openInBrowser(watchUrl)
+    }
 
     override fun onBackPressed() = onFinished()
 }

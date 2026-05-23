@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +31,8 @@ fun EpisodeDetailScreen(
     val episode by component.episode.subscribeAsState()
     val characters by component.characters.subscribeAsState()
     val isCharactersLoading by component.isCharactersLoading.subscribeAsState()
+    val season = episode.episode.substring(1, 3).removePrefix("0").toIntOrNull() ?: 1
+    val numberEpisode = episode.episode.substring(4).removePrefix("0").toIntOrNull() ?: 1
 
     LaunchedEffect(characters, isCharactersLoading) {
         if (isCharactersLoading) {
@@ -60,9 +63,10 @@ fun EpisodeDetailScreen(
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(modifier = modifier.padding(16.dp)) {
-                Text("Episode ${episode.episode}", modifier = Modifier.padding(horizontal = 8.dp))
+                Text("Season №$season episode $numberEpisode", modifier = Modifier.padding(horizontal = 8.dp))
                 Text("Name: ${episode.name}", modifier = Modifier.padding(horizontal = 8.dp))
                 Text("Created ${episode.air_date}", modifier = Modifier.padding(horizontal = 8.dp))
+                Button(onClick = {component.openEpisodeWatchPage()}, content = {Text("Open Watch Page")})
             }
         }
 

@@ -49,6 +49,7 @@ interface DetailEpisodeComponent {
     val characters: Value<List<Character>>
     val isCharactersLoading: Value<Boolean>
     fun onCharacterClicked(character: Character)
+    fun openEpisodeWatchPage()
     fun onBackPressed()
 }
 
