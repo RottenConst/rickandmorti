@@ -55,6 +55,12 @@ fun EpisodeListScreen(
             }
     }
 
+    LaunchedEffect(state) {
+        if (state.isNotEmpty()) {
+            loadingMore = false
+        }
+    }
+
     LazyColumn(
         state = listState,
         modifier = modifier.fillMaxSize()

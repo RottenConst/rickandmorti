@@ -41,7 +41,6 @@ class DefaultRootComponent(
         _activeTab.value = tab // Сохраняем активную вкладку
         when (tab) {
             RootComponent.Tab.CHARACTERS -> navigation.replaceAll(Config.CharacterList)
-            RootComponent.Tab.FAVORITES -> navigation.replaceAll(Config.CharacterFavorites)
             RootComponent.Tab.EPISODES -> navigation.replaceAll(Config.EpisodesList)
         }
     }
@@ -59,7 +58,6 @@ class DefaultRootComponent(
             DefaultCharacterListComponent(
                 componentContext = componentContext,
                 favoritesStore = favoritesStore,
-                isFavoritesOnly = false,
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))
                 }
@@ -70,7 +68,6 @@ class DefaultRootComponent(
             DefaultCharacterListComponent(
                 componentContext = componentContext,
                 favoritesStore = favoritesStore,
-                isFavoritesOnly = true,
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))
                 }

@@ -9,8 +9,8 @@ import org.example.rickandmorti.util.NetworkResult
 class CharacterRepositoryImpl(
     private val dataSource: CharacterDataSource
 ): CharacterRepository {
-    override suspend fun getCharacters(page: Int?): NetworkResult<List<Character>> {
-        return dataSource.getCharacters(page).map { dtoList ->
+    override suspend fun getCharacters(name: String?, page: Int?): NetworkResult<List<Character>> {
+        return dataSource.getCharacters(name, page).map { dtoList ->
             dtoList.map { it.toDomain() }
         }
     }

@@ -91,29 +91,20 @@ fun CharacterDetailScreen(
             if (episodes.isEmpty()) {
                 Text("No episodes found.")
             } else {
-                Card(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(8.dp),
-                    elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                LazyColumn(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    LazyColumn(
-                        modifier = Modifier.fillMaxWidth().padding(8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        items(episodes) { episode ->
-
-                            Column(modifier.padding(8.dp)) {
-                                ItemEpisode(
-                                    episode = episode,
-                                    onClick = { component.onEpisodeClicked(episode) }
-                                )
-                            }
+                    items(episodes) { episode ->
+                        Column(modifier.padding(8.dp)) {
+                            ItemEpisode(
+                                episode = episode,
+                                onClick = { component.onEpisodeClicked(episode) }
+                            )
                         }
                     }
                 }
             }
         }
-
     }
 }

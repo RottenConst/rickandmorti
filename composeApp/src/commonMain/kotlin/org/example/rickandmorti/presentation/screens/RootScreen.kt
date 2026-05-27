@@ -66,7 +66,6 @@ fun RootScreen(
                 is RootComponent.Child.DetailEpisode -> activeChild.component.episode.value.name
                 else -> when (activeTab) {
                     RootComponent.Tab.CHARACTERS -> "Characters"
-                    RootComponent.Tab.FAVORITES -> "Favorites"
                     RootComponent.Tab.EPISODES -> "Episodes"
                 }
             }
@@ -148,7 +147,6 @@ private fun CustomBottomBar(
         tabs.forEach { tab ->
             val icon = when (tab) {
                 RootComponent.Tab.CHARACTERS -> TablerIcons.Home
-                RootComponent.Tab.FAVORITES -> TablerIcons.Heart
                 RootComponent.Tab.EPISODES -> TablerIcons.List
             }
 

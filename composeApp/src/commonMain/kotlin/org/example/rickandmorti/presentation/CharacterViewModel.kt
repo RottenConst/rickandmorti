@@ -37,14 +37,16 @@ class CharacterViewModel(
         loadedAllCharacters()
     }
 
-    fun loadedAllCharacters(){
+    fun loadedAllCharacters(name: String? = null){
+        val query = name.takeIf { it?.isNotBlank() == true }
+        Logger.log("VM Searched for $query")
         if (isLoading || !hasMorePages) return
         isLoading = true
 
         viewModelScope.launch {
             delay(300)
 
-            when (val result = getCharactersUseCase(currentPage)) {
+            when (val result = getCharactersUseCase(name = query, page = currentPage)) {
                 is NetworkResult.Success -> {
                     val newChars = result.data
                     if (newChars.isNotEmpty()) {
@@ -64,6 +66,15 @@ class CharacterViewModel(
             }
             isLoading = false
         }
+    }
+
+    fun refreshWithSearch(name: String? = null) {
+        val query = name.takeIf { it?.isNotBlank() == true }
+        currentPage = 1
+        hasMorePages = true
+        _stateCharacter.value = UiStateCharacter.Loading
+
+        loadedAllCharacters(query)
     }
 
     fun loadedCharacter(urls: List<String>) {
@@ -133,12 +144,6 @@ class CharacterViewModel(
             _stateEpisode.value = UiStateEpisode.Success(episodes)
             isLoadingEpisode = false
         }
-    }
-
-    fun refresh() {
-        currentPage = 1
-        hasMorePages = true
-        loadedAllCharacters()
     }
 
     sealed class UiStateCharacter {

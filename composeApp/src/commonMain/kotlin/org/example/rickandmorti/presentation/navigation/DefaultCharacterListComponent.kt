@@ -28,12 +28,14 @@ import kotlin.collections.emptySet
 class DefaultCharacterListComponent(
     componentContext: ComponentContext,
     private val characterClicked: (Character) -> Unit,
-    override val isFavoritesOnly: Boolean = false,
     private val favoritesStore: FavoritesStore
 ): CharacterListComponent, ComponentContext by componentContext, KoinComponent {
 
     private val _allCharacters = MutableValue<List<Character>>(emptyList())
     private val _filteredCharacters = MutableValue<List<Character>>(emptyList())
+
+    private val _isFavoritesOnly = MutableValue(false)
+    override val isFavoritesOnly: Value<Boolean> = _isFavoritesOnly
 
     override val characters: Value<List<Character>> = _filteredCharacters
 
@@ -96,7 +98,7 @@ class DefaultCharacterListComponent(
 
     private fun updateFiltered() {
         val all = _allCharacters.value
-        val filtered = if (!isFavoritesOnly) {
+        val filtered = if (!isFavoritesOnly.value) {
             all
         } else {
             all.filter { currentFavorites.contains(it.id) }
@@ -123,4 +125,18 @@ class DefaultCharacterListComponent(
             favoritesStore.addFavorite(character.id)
         }
     }
+
+    fun toggleFavoritesOnly() {
+        _isFavoritesOnly.update { !it }
+        updateFiltered()
+    }
+
+    override fun loadNextPage(name: String?) {
+        loadMoreJob?.cancel()
+        loadMoreJob = scope.launch {
+            delay(300)
+            viewModel.refreshWithSearch(name)
+        }
+    }
+
 }

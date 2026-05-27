@@ -5,7 +5,7 @@ import org.example.rickandmorti.domain.repository.CharacterRepository
 import org.example.rickandmorti.util.NetworkResult
 
 class GetCharactersUseCase(private val repository: CharacterRepository) {
-    suspend operator fun invoke(page: Int? = null): NetworkResult<List<Character>> {
-        return repository.getCharacters(page)
+    suspend operator fun invoke(name: String? = null, page: Int? = null): NetworkResult<List<Character>> {
+        return repository.getCharacters(name = name, page = page)
     }
 }

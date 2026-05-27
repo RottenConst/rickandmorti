@@ -9,10 +9,13 @@ import org.example.rickandmorti.data.dto.CharacterDto
 import org.example.rickandmorti.data.dto.EpisodeDto
 
 class RickAndMortyApi(private val client: HttpClient) {
-    suspend fun getAllCharacters(page: Int? = null): List<CharacterDto> {
+    suspend fun getAllCharacters(name: String? = null, page: Int? = null): List<CharacterDto> {
         return client.get("/api/character") {
             if (page != null) {
                 parameter("page", page)
+            }
+            if (name != null) {
+                parameter("name", name)
             }
         }.body<Response<CharacterDto>>().results
     }

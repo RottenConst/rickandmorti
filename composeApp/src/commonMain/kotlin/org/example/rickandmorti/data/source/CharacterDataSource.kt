@@ -7,10 +7,17 @@ import org.example.rickandmorti.util.NetworkResult
 class CharacterDataSource(
     private val api: RickAndMortyApi
 ) {
-    suspend fun getCharacters(page: Int? = null): NetworkResult<List<CharacterDto>> {
+    suspend fun getCharacters(
+        name: String? = null,
+        page: Int? = null
+    ): NetworkResult<List<CharacterDto>> {
         return try {
             val response = if (page != null) {
-                api.getAllCharacters(page)
+                if (name != null) {
+                    api.getAllCharacters(name = name, page = page)
+                } else {
+                    api.getAllCharacters(page = page)
+                }
             } else {
                 api.getAllCharacters()
             }

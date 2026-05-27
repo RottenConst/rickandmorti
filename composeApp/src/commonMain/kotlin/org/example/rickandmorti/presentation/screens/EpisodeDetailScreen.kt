@@ -78,24 +78,17 @@ fun EpisodeDetailScreen(
                 if (characters.isEmpty()) {
                     Text("No characters found.")
                 } else {
-                    Card(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(8.dp),
-                        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        LazyColumn(
-                            modifier = Modifier.fillMaxWidth().padding(8.dp),
-                            verticalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            items(characters) { character ->
-                                ItemCharacter(
-                                    character = character,
-                                    isFavorite = false,
-                                    onToggleFavorite = {},
-                                    onClick = ({component.onCharacterClicked(character)})
-                                )
-                            }
+                        items(characters) { character ->
+                            ItemCharacter(
+                                character = character,
+                                isFavorite = false,
+                                onToggleFavorite = {},
+                                onClick = ({component.onCharacterClicked(character)})
+                            )
                         }
                     }
                 }

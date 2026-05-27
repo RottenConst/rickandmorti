@@ -15,12 +15,11 @@ interface RootComponent {
     fun onTabSelected(tab: Tab)
 
     enum class Tab {
-        CHARACTERS, FAVORITES, EPISODES;
+        CHARACTERS, EPISODES;
 
         val title: String
             get() = when (this) {
                 CHARACTERS -> "All"
-                FAVORITES -> "Favorites"
                 EPISODES -> "Episodes"
             }
     }
@@ -56,8 +55,8 @@ interface DetailEpisodeComponent {
 interface CharacterListComponent {
     val characters: Value<List<Character>>
     val favorites: Flow<Set<Int>>
-    val isFavoritesOnly: Boolean
-
+    val isFavoritesOnly: Value<Boolean>
+    fun loadNextPage(name: String?)
     fun onCharacterClicked(character: Character)
     fun loadNextPage()
     fun toggleFavorite(character: Character)
