@@ -36,6 +36,8 @@ class DefaultCharacterListComponent(
 
     private val _isFavoritesOnly = MutableValue(false)
     override val isFavoritesOnly: Value<Boolean> = _isFavoritesOnly
+    private val _hasMorePages = MutableValue(true)
+    override val hasMorePages: Value<Boolean> = _hasMorePages
 
     override val characters: Value<List<Character>> = _filteredCharacters
 
@@ -64,6 +66,7 @@ class DefaultCharacterListComponent(
 
                     }
                     is CharacterViewModel.UiStateCharacter.Error -> {
+                        _hasMorePages.value = false
                     }
                 }
 
@@ -131,11 +134,19 @@ class DefaultCharacterListComponent(
         updateFiltered()
     }
 
-    override fun loadNextPage(name: String?) {
+    override fun loadSearch(name: String?) {
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
             delay(300)
             viewModel.refreshWithSearch(name)
+        }
+    }
+
+    override fun loadNextPage(name: String?) {
+        loadMoreJob?.cancel()
+        loadMoreJob = scope.launch {
+            delay(300)
+            viewModel.loadNextPage(name)
         }
     }
 

@@ -34,7 +34,7 @@ fun EpisodeListScreen(
     val listState = rememberLazyListState()
 
     var loadingMore by remember { mutableStateOf(false) }
-
+    val hasMorePages by component.hasMorePages.subscribeAsState()
     val shouldLoadMore = remember {
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
@@ -85,7 +85,7 @@ fun EpisodeListScreen(
             )
         }
 
-        if (loadingMore) {
+        if (loadingMore && hasMorePages) {
             item {
                 CircularProgressIndicator(
                     modifier = Modifier

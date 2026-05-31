@@ -68,13 +68,35 @@ class CharacterViewModel(
         }
     }
 
+    fun loadNextPage(name: String? = null) {
+        if (!hasMorePages) return
+
+        val query = name.takeIf { it?.isNotBlank() == true }
+
+        viewModelScope.launch {
+            when (val result = getCharactersUseCase(name = query, page = currentPage)) {
+                is NetworkResult.Success -> {
+                    val newChars = result.data
+                    val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
+                    _stateCharacter.value = UiStateCharacter.Success(currentList + newChars)
+                    currentPage++
+                    hasMorePages = newChars.isNotEmpty()
+                }
+                is NetworkResult.Error -> {
+                    _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Error")
+                    hasMorePages = false
+                }
+            }
+        }
+    }
+
     fun refreshWithSearch(name: String? = null) {
         val query = name.takeIf { it?.isNotBlank() == true }
         currentPage = 1
         hasMorePages = true
         _stateCharacter.value = UiStateCharacter.Loading
 
-        loadedAllCharacters(query)
+        loadNextPage(query)
     }
 
     fun loadedCharacter(urls: List<String>) {

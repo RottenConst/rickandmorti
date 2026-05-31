@@ -74,37 +74,56 @@ fun RootScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = { Text(text = titleText, modifier = Modifier.fillMaxWidth(), textAlign = TextAlign.Center) },
-                navigationIcon = {
-                    if (canGoBack) {
-                        IconButton(onClick = { component.goBack() }) {
-                            Icon(imageVector = TablerIcons.ArrowLeft, contentDescription = "Back")
+            if (
+                component.stack.value.active.instance is RootComponent.Child.DetailCharacter ||
+                component.stack.value.active.instance is RootComponent.Child.DetailEpisode
+            ) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            text = titleText,
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = TextAlign.Center
+                        )
+                    },
+                    navigationIcon = {
+                        if (canGoBack) {
+                            IconButton(onClick = { component.goBack() }) {
+                                Icon(
+                                    imageVector = TablerIcons.ArrowLeft,
+                                    contentDescription = "Back"
+                                )
+                            }
                         }
-                    }
-                },
-                actions = {
-                    // Показываем сердце только если активен Detail
-                    if ((activeChild is RootComponent.Child.DetailCharacter) ) {
-                        val character = activeChild.component.character.value
-                        val favorites by activeChild.component.favorites.subscribeAsState()
-                        val isFavorite = favorites.contains(character.id)
+                    },
+                    actions = {
+                        // Показываем сердце только если активен Detail
+                        if ((activeChild is RootComponent.Child.DetailCharacter)) {
+                            val character = activeChild.component.character.value
+                            val favorites by activeChild.component.favorites.subscribeAsState()
+                            val isFavorite = favorites.contains(character.id)
 
-                        IconButton(
-                            onClick = { activeChild.component.toggleFavorite(character) }
-                        ) {
-                            Icon(
-                                imageVector = TablerIcons.Heart,
-                                contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                                tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(alpha = 0.5f)
-                            )
+                            IconButton(
+                                onClick = { activeChild.component.toggleFavorite(character) }
+                            ) {
+                                Icon(
+                                    imageVector = TablerIcons.Heart,
+                                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                    tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(
+                                        alpha = 0.5f
+                                    )
+                                )
+                            }
                         }
                     }
-                }
-            )
+                )
+            }
         },
         bottomBar = {
-            if (component.stack.value.active.instance !is RootComponent.Child.DetailCharacter) {
+            if (
+                component.stack.value.active.instance !is RootComponent.Child.DetailCharacter &&
+                component.stack.value.active.instance !is RootComponent.Child.DetailEpisode
+                ) {
                 CustomBottomBar(
                     tabs = RootComponent.Tab.entries.toTypedArray(),
                     selectedTab = activeTab,

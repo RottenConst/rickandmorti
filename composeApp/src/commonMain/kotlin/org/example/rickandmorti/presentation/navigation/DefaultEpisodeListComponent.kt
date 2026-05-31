@@ -28,6 +28,9 @@ class DefaultEpisodeListComponent(
 
     private val _allEpisodes = MutableValue<List<Episode>>(emptyList())
     override val episodes: Value<List<Episode>> = _allEpisodes
+
+    private val _hasMorePages = MutableValue(true)
+    override val hasMorePages: Value<Boolean> = _hasMorePages
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
     private val viewModel: CharacterViewModel = get<CharacterViewModel> {
@@ -44,8 +47,12 @@ class DefaultEpisodeListComponent(
                         Logger.log("Received ${state.episodes.size} episodes from Flow")
                         _allEpisodes.update { state.episodes }
                     }
-                    is CharacterViewModel.UiStateEpisode.Loading -> {}
-                    is CharacterViewModel.UiStateEpisode.Error -> {}
+                    is CharacterViewModel.UiStateEpisode.Loading -> {
+                        _hasMorePages.value = true
+                    }
+                    is CharacterViewModel.UiStateEpisode.Error -> {
+                        _hasMorePages.value = false
+                    }
                 }
             }.launchIn(scope)
 

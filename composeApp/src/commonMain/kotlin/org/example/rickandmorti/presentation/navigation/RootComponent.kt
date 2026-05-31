@@ -56,7 +56,9 @@ interface CharacterListComponent {
     val characters: Value<List<Character>>
     val favorites: Flow<Set<Int>>
     val isFavoritesOnly: Value<Boolean>
+    val hasMorePages: Value<Boolean>
     fun loadNextPage(name: String?)
+    fun loadSearch(name: String?)
     fun onCharacterClicked(character: Character)
     fun loadNextPage()
     fun toggleFavorite(character: Character)
@@ -64,6 +66,7 @@ interface CharacterListComponent {
 
 interface EpisodeListComponent {
     val episodes: Value<List<Episode>>
+    val hasMorePages: Value<Boolean>
     fun onEpisodeClicked(episode: Episode)
     fun loadNextPage()
 }

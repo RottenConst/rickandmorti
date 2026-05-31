@@ -70,8 +70,9 @@ fun ListScreen(
     }
 
     LaunchedEffect(debouncedQuery.value, isFavoritesOnly) {
-        component.loadNextPage(debouncedQuery.value.takeIf { it.isNotBlank() })
+        component.loadSearch(debouncedQuery.value.takeIf { it.isNotBlank() })
     }
+    val hasMorePages by component.hasMorePages.subscribeAsState()
     // Создаем derived state для отслеживания условия прокрутки
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -89,7 +90,7 @@ fun ListScreen(
                 if (loadMore) {
                     Logger.log("ListContent: Scrolled near end, loading more...")
                     loadingMore = true
-                    component.loadNextPage()
+                    component.loadNextPage(debouncedQuery.value.takeIf { it.isNotBlank() })
                 }
             }
     }
@@ -134,7 +135,7 @@ fun ListScreen(
                     .height(68.dp)
                     .padding(8.dp)
                     .background(
-                        color = if (isFavoritesOnly) Color(0xFFFFEBEE) else Color(0xFFE0E0E0),
+                        color = if (isFavoritesOnly) Color(0xFFFFEBEE) else Color(0xFFE4DEE7),
                         shape = RoundedCornerShape(32.dp)
                     )
                     .clickable {
@@ -181,7 +182,7 @@ fun ListScreen(
             }
 
             // Индикатор загрузки
-            if (loadingMore) {
+            if (loadingMore && hasMorePages) {
                 item {
                     CircularProgressIndicator(
                         modifier = Modifier
