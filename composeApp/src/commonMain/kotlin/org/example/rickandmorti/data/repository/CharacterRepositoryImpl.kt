@@ -19,9 +19,3 @@ class CharacterRepositoryImpl(
         return dataSource.getCharacter(id).map { it.toDomain() }
     }
 }
-
-// Помогаем NetworkResult преобразовать тип
-private fun <T, R> NetworkResult<T>.map(transform: (T) -> R): NetworkResult<R> = when (this) {
-    is NetworkResult.Success -> NetworkResult.Success(transform(data))
-    is NetworkResult.Error -> NetworkResult.Error(exception)
-}

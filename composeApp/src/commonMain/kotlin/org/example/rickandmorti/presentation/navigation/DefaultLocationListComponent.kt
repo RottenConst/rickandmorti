@@ -14,45 +14,45 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import org.example.rickandmorti.domain.model.Episode
-import org.example.rickandmorti.presentation.EpisodesViewModel
-import org.example.rickandmorti.presentation.uistate.UiStateEpisode
+import org.example.rickandmorti.domain.model.Location
+import org.example.rickandmorti.presentation.LocationViewModel
+import org.example.rickandmorti.presentation.uistate.UiStateLocation
 import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
+import kotlin.time.Duration.Companion.milliseconds
 
-class DefaultEpisodeListComponent(
+class DefaultLocationListComponent(
     componentContext: ComponentContext,
-    private val episodeClicked: (Episode) -> Unit,
-): EpisodeListComponent, ComponentContext by componentContext, KoinComponent {
-
-    private val _allEpisodes = MutableValue<List<Episode>>(emptyList())
-    override val episodes: Value<List<Episode>> = _allEpisodes
-
+    private val locationClicked: (Location) -> Unit,
+): LocationListComponent, ComponentContext by componentContext, KoinComponent {
+    private val _allLocations = MutableValue<List<Location>>(emptyList())
+    override val location: Value<List<Location>> = _allLocations
     private val _hasMorePages = MutableValue(true)
     override val hasMorePages: Value<Boolean> = _hasMorePages
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
-    private val viewModel: EpisodesViewModel = get<EpisodesViewModel> {
+
+    private val viewModel: LocationViewModel = get<LocationViewModel> {
         parametersOf()
     }
 
     init {
-        Logger.log("List Episode: init started")
+        Logger.log("ListLocationComponent: init started")
 
-        viewModel.stateEpisode
-            .onEach { state ->
-                when(state) {
-                    is UiStateEpisode.Success -> {
-                        Logger.log("Received ${state.episodes.size} episodes from Flow")
-                        _allEpisodes.update { state.episodes }
+        viewModel.stateLocation
+            .onEach { location ->
+                when(location) {
+                    is UiStateLocation.Success -> {
+                        Logger.log("Received ${location.locations.size} locations from flow")
+                        _allLocations.update { location.locations }
                     }
-                    is UiStateEpisode.Loading -> {
+                    is UiStateLocation.Loading -> {
                         _hasMorePages.value = true
                     }
-                    is UiStateEpisode.Error -> {
+                    is UiStateLocation.Error -> {
                         _hasMorePages.value = false
                     }
                 }
@@ -60,41 +60,41 @@ class DefaultEpisodeListComponent(
 
         lifecycle.subscribe(
             onCreate = {
-                Logger.log("Episode list Component: onCreate")
+                Logger.log("ListLocationComponent: onCreate")
                 scope.launch {
-                    viewModel.loadAllEpisodes()
+                    viewModel.loadedAllLocations()
                 }
             },
             onDestroy = {
-                Logger.log("Episode list Component: onDestroy")
+                Logger.log("ListLocationComponent: destroyed")
                 scope.cancel()
             }
         )
     }
 
-    override fun onEpisodeClicked(episode: Episode) = episodeClicked(episode)
+    override fun onLocationClick(location: Location) = locationClicked(location)
 
     override fun loadNextPage() {
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
-            delay(100)
-            viewModel.loadAllEpisodes()
+            delay(100.milliseconds)
+            viewModel.loadedAllLocations()
+        }
+    }
+
+    override fun loadSearchLocation(name: String?) {
+        loadMoreJob?.cancel()
+        loadMoreJob = scope.launch {
+            delay(300.milliseconds)
+            viewModel.refreshWithSearch(name)
         }
     }
 
     override fun loadNextPage(name: String?) {
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
-            delay(300)
+            delay(300.milliseconds)
             viewModel.loadNextPage(name)
-        }
-    }
-
-    override fun loadSearchEpisode(name: String?) {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            delay(300)
-            viewModel.refreshWithSearch(name)
         }
     }
 }

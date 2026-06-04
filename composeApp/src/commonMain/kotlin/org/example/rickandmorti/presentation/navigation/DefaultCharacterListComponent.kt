@@ -22,6 +22,7 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.presentation.CharacterViewModel
+import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.util.Logger
 import kotlin.collections.emptySet
 
@@ -58,14 +59,14 @@ class DefaultCharacterListComponent(
         viewModel.stateCharacter
             .onEach { state ->
                 when (state) {
-                    is CharacterViewModel.UiStateCharacter.Success -> {
+                    is UiStateCharacter.Success -> {
                         Logger.log("Received ${state.characters.size} characters from Flow")
                         _allCharacters.update { state.characters }
                     }
-                    is CharacterViewModel.UiStateCharacter.Loading -> {
-
+                    is UiStateCharacter.Loading -> {
+                        _hasMorePages.value = true
                     }
-                    is CharacterViewModel.UiStateCharacter.Error -> {
+                    is UiStateCharacter.Error -> {
                         _hasMorePages.value = false
                     }
                 }

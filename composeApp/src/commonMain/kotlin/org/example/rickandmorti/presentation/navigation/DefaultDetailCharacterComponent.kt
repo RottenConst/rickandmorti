@@ -13,6 +13,7 @@ import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.presentation.CharacterViewModel
+import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -50,15 +51,15 @@ class DefaultDetailCharacterComponent(
         viewModel.stateEpisode
             .onEach { state ->
                 when (state) {
-                    is CharacterViewModel.UiStateEpisode.Loading -> {
+                    is UiStateEpisode.Loading -> {
                         _isEpisodeLoading.value = true
                     }
-                    is CharacterViewModel.UiStateEpisode.Success -> {
+                    is UiStateEpisode.Success -> {
                         Logger.log("loaded episod ${state.episodes.size}")
                         _episodes.value = state.episodes
                         _isEpisodeLoading.value = false
                     }
-                    is CharacterViewModel.UiStateEpisode.Error -> {
+                    is UiStateEpisode.Error -> {
                         _isEpisodeLoading.value = false
                     }
                 }

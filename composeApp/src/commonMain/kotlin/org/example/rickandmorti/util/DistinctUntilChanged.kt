@@ -17,10 +17,6 @@ fun <T : Any> Value<T>.distinctUntilChanged(): Value<T> = object : Value<T>() {
             }
         }
 
-        return object : Cancellation {
-            override fun cancel() {
-                originalCancellation.cancel()
-            }
-        }
+        return Cancellation { originalCancellation.cancel() }
     }
 }

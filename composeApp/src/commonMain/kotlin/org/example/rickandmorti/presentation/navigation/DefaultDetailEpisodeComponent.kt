@@ -12,7 +12,8 @@ import kotlinx.coroutines.flow.onEach
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.openInBrowser
-import org.example.rickandmorti.presentation.CharacterViewModel
+import org.example.rickandmorti.presentation.EpisodesViewModel
+import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
@@ -34,7 +35,7 @@ class DefaultDetailEpisodeComponent(
     override val isCharactersLoading: Value<Boolean> = _isCharactersLoaded
 
     private val scope = CoroutineScope(SupervisorJob())
-    private val viewModel: CharacterViewModel = get<CharacterViewModel> {
+    private val viewModel: EpisodesViewModel = get<EpisodesViewModel> {
         parametersOf()
     }
 
@@ -45,15 +46,15 @@ class DefaultDetailEpisodeComponent(
         viewModel.stateCharacter
             .onEach { state ->
                 when(state) {
-                    is CharacterViewModel.UiStateCharacter.Loading -> {
+                    is UiStateCharacter.Loading -> {
                         _isCharactersLoaded.value = true
                     }
-                    is CharacterViewModel.UiStateCharacter.Success -> {
+                    is UiStateCharacter.Success -> {
                         Logger.log("loaded character ${state.characters.size}")
                         _characters.value = state.characters
                         _isCharactersLoaded.value = false
                     }
-                    is CharacterViewModel.UiStateCharacter.Error -> {
+                    is UiStateCharacter.Error -> {
                         _isCharactersLoaded.value = false
                     }
                 }

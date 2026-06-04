@@ -7,7 +7,7 @@ import org.example.rickandmorti.util.NetworkResult
 class GetEpisodeUseCase(
     private val episodeRepository: EpisodeRepository
 ) {
-    suspend operator fun invoke(page: Int?): NetworkResult<List<Episode>> {
-        return episodeRepository.getEpisodes(page)
+    suspend operator fun invoke(name: String? = null, page: Int? = null): NetworkResult<List<Episode>> {
+        return episodeRepository.getEpisodes(name = name, page = page)
     }
 }

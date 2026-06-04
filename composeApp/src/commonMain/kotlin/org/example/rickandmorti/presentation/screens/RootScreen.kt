@@ -46,6 +46,7 @@ import compose.icons.tablericons.ArrowLeft
 import compose.icons.tablericons.Heart
 import compose.icons.tablericons.Home
 import compose.icons.tablericons.List
+import compose.icons.tablericons.Map
 import org.example.rickandmorti.presentation.navigation.RootComponent
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -64,9 +65,11 @@ fun RootScreen(
             when (activeChild) {
                 is RootComponent.Child.DetailCharacter -> activeChild.component.character.value.name
                 is RootComponent.Child.DetailEpisode -> activeChild.component.episode.value.name
+                is RootComponent.Child.DetailLocation -> activeChild.component.location.value.name
                 else -> when (activeTab) {
                     RootComponent.Tab.CHARACTERS -> "Characters"
                     RootComponent.Tab.EPISODES -> "Episodes"
+                    RootComponent.Tab.LOCATIONS -> "Locations"
                 }
             }
         }
@@ -76,7 +79,8 @@ fun RootScreen(
         topBar = {
             if (
                 component.stack.value.active.instance is RootComponent.Child.DetailCharacter ||
-                component.stack.value.active.instance is RootComponent.Child.DetailEpisode
+                component.stack.value.active.instance is RootComponent.Child.DetailEpisode ||
+                component.stack.value.active.instance is RootComponent.Child.DetailLocation
             ) {
                 TopAppBar(
                     title = {
@@ -143,6 +147,8 @@ fun RootScreen(
                 is RootComponent.Child.Characters -> ListScreen(component = instance.component)
                 is RootComponent.Child.Favorites -> ListScreen(component = instance.component)
                 is RootComponent.Child.Episodes -> EpisodeListScreen(component = instance.component)
+                is RootComponent.Child.Locations -> LocationListScreen(component = instance.component)
+                is RootComponent.Child.DetailLocation -> LocationDetailScreen(component = instance.component)
             }
         }
     }
@@ -167,6 +173,7 @@ private fun CustomBottomBar(
             val icon = when (tab) {
                 RootComponent.Tab.CHARACTERS -> TablerIcons.Home
                 RootComponent.Tab.EPISODES -> TablerIcons.List
+                RootComponent.Tab.LOCATIONS -> TablerIcons.Map
             }
 
             var isHovered by remember { mutableStateOf(false) }

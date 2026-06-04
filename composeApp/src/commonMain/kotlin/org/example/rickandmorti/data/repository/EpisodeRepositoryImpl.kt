@@ -9,8 +9,8 @@ import org.example.rickandmorti.util.NetworkResult
 class EpisodeRepositoryImpl(
     private val dataSource: EpisodeDataSource
 ): EpisodeRepository {
-    override suspend fun getEpisodes(page: Int?): NetworkResult<List<Episode>> {
-        return dataSource.getEpisodes(page = page).map { dtoEpisode ->
+    override suspend fun getEpisodes(name: String?, page: Int?): NetworkResult<List<Episode>> {
+        return dataSource.getEpisodes(name, page).map { dtoEpisode ->
             dtoEpisode.map { it.toDomain() }
         }
     }
@@ -22,7 +22,7 @@ class EpisodeRepositoryImpl(
 }
 
 // Помогаем NetworkResult преобразовать тип
-private fun <T, R> NetworkResult<T>.map(transform: (T) -> R): NetworkResult<R> = when (this) {
+fun <T, R> NetworkResult<T>.map(transform: (T) -> R): NetworkResult<R> = when (this) {
     is NetworkResult.Success -> NetworkResult.Success(transform(data))
     is NetworkResult.Error -> NetworkResult.Error(exception)
 }

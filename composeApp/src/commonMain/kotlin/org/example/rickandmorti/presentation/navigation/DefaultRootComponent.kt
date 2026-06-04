@@ -15,6 +15,7 @@ import kotlinx.serialization.Serializable
 import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.util.distinctUntilChanged
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
@@ -42,6 +43,7 @@ class DefaultRootComponent(
         when (tab) {
             RootComponent.Tab.CHARACTERS -> navigation.replaceAll(Config.CharacterList)
             RootComponent.Tab.EPISODES -> navigation.replaceAll(Config.EpisodesList)
+            RootComponent.Tab.LOCATIONS -> navigation.replaceAll(Config.LocationList)
         }
     }
 
@@ -106,6 +108,25 @@ class DefaultRootComponent(
                 }
             )
         )
+
+        Config.LocationList -> RootComponent.Child.Locations(
+            DefaultLocationListComponent(
+                componentContext = componentContext,
+                locationClicked = { location ->
+                    navigation.push(Config.DetailLocation(location))}
+            )
+        )
+
+        is Config.DetailLocation -> RootComponent.Child.DetailLocation(
+            DefaultDetailLocationComponent(
+                componentContext = componentContext,
+                location = config.location,
+                onFinished = { navigation.pop() },
+                characterClicked = { character ->
+                    navigation.push(Config.Detail(character))
+                }
+            )
+        )
     }
 
 
@@ -119,10 +140,18 @@ class DefaultRootComponent(
 
         @Serializable
         data object EpisodesList: Config
+
+        @Serializable
+        data object LocationList: Config
+
         @Serializable
         data class Detail(val character: Character) : Config
 
         @Serializable
         data class DetailEpisode(val episode: Episode): Config
+
+        @Serializable
+        data class DetailLocation(val location: Location): Config {
+        }
     }
 }

@@ -5,6 +5,7 @@ import com.arkivanov.decompose.value.Value
 import kotlinx.coroutines.flow.Flow
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.domain.model.Location
 
 interface RootComponent {
     val stack: Value<ChildStack<*, Child>>
@@ -15,12 +16,13 @@ interface RootComponent {
     fun onTabSelected(tab: Tab)
 
     enum class Tab {
-        CHARACTERS, EPISODES;
+        CHARACTERS, EPISODES, LOCATIONS;
 
         val title: String
             get() = when (this) {
                 CHARACTERS -> "All"
                 EPISODES -> "Episodes"
+                LOCATIONS -> "Locations"
             }
     }
 
@@ -30,6 +32,8 @@ interface RootComponent {
         class Favorites(val component: CharacterListComponent) : Child
         class Episodes(val component: DefaultEpisodeListComponent) : Child
         class DetailEpisode(val component: DetailEpisodeComponent) : Child
+        class Locations(val component: LocationListComponent): Child
+        class DetailLocation(val component: DetailLocationComponent): Child
     }
 }
 
@@ -52,6 +56,14 @@ interface DetailEpisodeComponent {
     fun onBackPressed()
 }
 
+interface DetailLocationComponent {
+    val location: Value<Location>
+    val characters: Value<List<Character>>
+    val isCharactersLoading: Value<Boolean>
+    fun onCharacterClicked(character: Character)
+    fun onBackPressed()
+}
+
 interface CharacterListComponent {
     val characters: Value<List<Character>>
     val favorites: Flow<Set<Int>>
@@ -67,6 +79,17 @@ interface CharacterListComponent {
 interface EpisodeListComponent {
     val episodes: Value<List<Episode>>
     val hasMorePages: Value<Boolean>
+    fun loadSearchEpisode(name: String?)
     fun onEpisodeClicked(episode: Episode)
     fun loadNextPage()
+    fun loadNextPage(name: String?)
+}
+
+interface LocationListComponent {
+    val location: Value<List<Location>>
+    val hasMorePages: Value<Boolean>
+    fun loadSearchLocation(name: String?)
+    fun onLocationClick(location: Location)
+    fun loadNextPage()
+    fun loadNextPage(name: String?)
 }

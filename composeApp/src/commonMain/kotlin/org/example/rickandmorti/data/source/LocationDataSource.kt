@@ -1,25 +1,25 @@
 package org.example.rickandmorti.data.source
 
 import org.example.rickandmorti.data.api.RickAndMortyApi
-import org.example.rickandmorti.data.dto.EpisodeDto
+import org.example.rickandmorti.data.dto.LocationDto
 import org.example.rickandmorti.util.NetworkResult
 
-class EpisodeDataSource (
+class LocationDataSource(
     private val api: RickAndMortyApi
 ) {
-    suspend fun getEpisodes(
+    suspend fun getAllLocations(
         name: String? = null,
         page: Int? = null
-    ): NetworkResult<List<EpisodeDto>> {
+    ): NetworkResult<List<LocationDto>> {
         return try {
             val response = if (page != null) {
                 if (name != null) {
-                    api.getAllEpisodes(name = name, page = page)
+                    api.getAllLocations(name = name, page = page)
                 } else {
-                    api.getAllEpisodes(page = page)
+                    api.getAllLocations(page = page)
                 }
             } else {
-                api.getAllEpisodes()
+                api.getAllLocations()
             }
             NetworkResult.Success(response)
         } catch (e: Exception) {
@@ -27,10 +27,10 @@ class EpisodeDataSource (
         }
     }
 
-    suspend fun getEpisode(id: Int): NetworkResult<EpisodeDto> {
+    suspend fun getLocation(id: Int): NetworkResult<LocationDto> {
         return try {
-            val episodeDto = api.getEpisode(id)
-            NetworkResult.Success(episodeDto)
+            val locationDto = api.getLocation(id)
+            NetworkResult.Success(locationDto)
         } catch (e: Exception) {
             NetworkResult.Error(e)
         }
