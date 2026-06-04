@@ -2,9 +2,11 @@ package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Card
@@ -16,6 +18,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.example.rickandmorti.presentation.navigation.DetailLocationComponent
@@ -55,16 +58,30 @@ fun LocationDetailScreen(
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentWidth()
                 .padding(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
             Column(
-                modifier = modifier.padding(16.dp)
+                modifier = modifier.padding(16.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Text("Name: ${location.name}", modifier = Modifier.padding(8.dp))
-                Text("Dimension: ${location.dimension}", modifier = Modifier.padding(8.dp))
-                Text("Type: ${location.type}", modifier = Modifier.padding(8.dp))
+                Row {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        text = "Dimension:",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(location.dimension)
+                }
+                Row {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        text = "Type:",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(location.type)
+                }
             }
         }
 

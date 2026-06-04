@@ -1,6 +1,9 @@
 package org.example.rickandmorti.presentation.screens.items
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -54,7 +57,23 @@ fun ItemCharacter(
             )
             Spacer(modifier = Modifier.width(12.dp))
             Column(modifier = Modifier.weight(1f)) {
-                Text(text = character.name, style = MaterialTheme.typography.titleMedium)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Text(text = character.name, style = MaterialTheme.typography.titleMedium)
+                    Box(
+                        modifier = Modifier
+                            .size(8.dp)
+                            .clip(CircleShape)
+                            .background(
+                                color = when(character.status) {
+                                    "Alive" -> Color.Green
+                                    "Dead" -> Color.Red
+                                    else -> Color.Gray
+                                })
+                    )
+                }
                 Text(text = character.status, style = MaterialTheme.typography.bodySmall)
             }
             IconButton(onClick = { onToggleFavorite(character) }) {

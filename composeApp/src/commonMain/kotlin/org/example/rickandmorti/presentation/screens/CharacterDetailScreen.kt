@@ -1,10 +1,15 @@
 package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
@@ -19,7 +24,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
@@ -61,25 +68,82 @@ fun CharacterDetailScreen(
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-
-        AsyncImage(
-            model = character.image,
-            contentDescription = "character image",
-            modifier = Modifier.padding(8.dp).clip(CircleShape),
-            contentScale = ContentScale.Crop
-        )
         Card(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(8.dp),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+                .padding(8.dp)
+                .wrapContentWidth(),
+            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         ) {
-            Column(modifier = modifier.padding(16.dp)) {
-                Text("Status: ${character.status}", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Species: ${character.species}", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Gender: ${character.gender}", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Origin: ${character.origin.name}", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Location: ${character.location.name}", modifier = Modifier.padding(horizontal = 8.dp))
+            Row(
+                modifier = modifier.padding(16.dp),
+                horizontalArrangement = Arrangement.Center,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                AsyncImage(
+                    model = character.image,
+                    contentDescription = "character image",
+                    modifier = Modifier.padding(8.dp).clip(CircleShape).size(height = 120.dp, width = 120.dp),
+                    contentScale = ContentScale.Crop
+                )
+                Column(
+                    modifier = modifier.padding(8.dp),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = "Status: ",
+                            fontWeight = FontWeight.Bold)
+                        Text(character.status)
+                        Box(
+                            modifier = Modifier
+                                .padding(8.dp)
+                                .size(8.dp)
+                                .clip(CircleShape)
+                                .background(
+                                    color = when(character.status) {
+                                        "Alive" -> Color.Green
+                                        "Dead" -> Color.Red
+                                        else -> Color.Gray
+                                    }),
+                        )
+                    }
+                    Row {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = "Species: ",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(character.species)
+                    }
+                    Row {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = "Gender: ",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(character.gender)
+                    }
+                    Row {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = "Origin: ",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(character.origin.name, maxLines = 1)
+                    }
+                    Row {
+                        Text(
+                            modifier = Modifier.padding(horizontal = 8.dp),
+                            text = "Location: ",
+                            fontWeight = FontWeight.Bold
+                        )
+                        Text(character.location.name, maxLines = 1)
+                    }
+
+                }
             }
         }
         // 🔹 Отображение эпизодов

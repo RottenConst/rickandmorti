@@ -2,9 +2,11 @@ package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
@@ -17,6 +19,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
 import org.example.rickandmorti.presentation.navigation.DetailEpisodeComponent
@@ -51,26 +54,54 @@ fun EpisodeDetailScreen(
 
     Column(
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Card(
             modifier = Modifier
-                .fillMaxWidth()
+                .wrapContentWidth()
                 .padding(8.dp),
             elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
         ) {
-            Column(modifier = modifier.padding(16.dp)) {
-                Text("Season №$season episode $numberEpisode", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Name: ${episode.name}", modifier = Modifier.padding(horizontal = 8.dp))
-                Text("Created ${episode.air_date}", modifier = Modifier.padding(horizontal = 8.dp))
-                Button(onClick = {component.openEpisodeWatchPage()}, content = {Text("Open Watch Page")})
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = modifier.padding(16.dp)
+            ) {
+                Row {
+                    Text(
+                        modifier = modifier.padding(horizontal = 8.dp),
+                        text = "Season",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text("$season")
+                    Text(modifier = Modifier.padding(horizontal = 8.dp),
+                        text = "episode",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text("№$numberEpisode")
+                }
+                Row {
+                    Text(
+                        modifier = Modifier.padding(horizontal = 8.dp),
+                        text = "Created:",
+                        fontWeight = FontWeight.Bold
+                    )
+                    Text(episode.air_date)
+                }
+
             }
         }
-
-            Text("Characters in episode:", style = MaterialTheme.typography.titleMedium)
+            Button(
+                modifier = modifier.padding(bottom = 8.dp),
+                onClick = {component.openEpisodeWatchPage()},
+                content = {Text("Open Watch this episode")}
+            )
+            Text(
+                text = "Characters in episode:",
+                style = MaterialTheme.typography.titleMedium
+            )
 
             if (isCharactersLoading) {
                 Text("Loading character...")
