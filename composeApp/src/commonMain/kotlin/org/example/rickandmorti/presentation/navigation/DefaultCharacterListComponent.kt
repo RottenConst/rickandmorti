@@ -25,6 +25,7 @@ import org.example.rickandmorti.presentation.CharacterViewModel
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.util.Logger
 import kotlin.collections.emptySet
+import kotlin.time.Duration.Companion.milliseconds
 
 class DefaultCharacterListComponent(
     componentContext: ComponentContext,
@@ -42,7 +43,7 @@ class DefaultCharacterListComponent(
 
     override val characters: Value<List<Character>> = _filteredCharacters
 
-    override val favorites: Flow<Set<Int>> = favoritesStore.favoritesFlow
+    override val favorites: Flow<Set<Int>> = favoritesStore.favoritesCharactersFlow
     private var currentFavorites: Set<Int> = emptySet()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -75,7 +76,7 @@ class DefaultCharacterListComponent(
             .launchIn(scope)
 
         // Слушаем изменения избранного
-        favoritesStore.favoritesFlow
+        favoritesStore.favoritesCharactersFlow
             .distinctUntilChanged()
             .onEach { favorites ->
                 currentFavorites = favorites
@@ -117,16 +118,16 @@ class DefaultCharacterListComponent(
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
             // Небольшая задержка, чтобы избежать множественных вызовов
-            delay(100)
+            delay(100.milliseconds)
             viewModel.loadedAllCharacters()
         }
     }
 
     override fun toggleFavorite(character: Character) {
-        if (favoritesStore.isFavorite(character.id)) {
-            favoritesStore.removeFavorite(character.id)
+        if (favoritesStore.isFavoriteCharacter(character.id)) {
+            favoritesStore.removeFavoriteCharacter(character.id)
         } else {
-            favoritesStore.addFavorite(character.id)
+            favoritesStore.addFavoriteCharacter(character.id)
         }
     }
 
@@ -138,7 +139,7 @@ class DefaultCharacterListComponent(
     override fun loadSearch(name: String?) {
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
-            delay(300)
+            delay(300.milliseconds)
             viewModel.refreshWithSearch(name)
         }
     }
@@ -146,7 +147,7 @@ class DefaultCharacterListComponent(
     override fun loadNextPage(name: String?) {
         loadMoreJob?.cancel()
         loadMoreJob = scope.launch {
-            delay(300)
+            delay(300.milliseconds)
             viewModel.loadNextPage(name)
         }
     }

@@ -102,22 +102,62 @@ fun RootScreen(
                     },
                     actions = {
                         // Показываем сердце только если активен Detail
-                        if ((activeChild is RootComponent.Child.DetailCharacter)) {
-                            val character = activeChild.component.character.value
-                            val favorites by activeChild.component.favorites.subscribeAsState()
-                            val isFavorite = favorites.contains(character.id)
+                        when (activeChild) {
+                            is RootComponent.Child.DetailCharacter -> {
+                                val character = activeChild.component.character.value
+                                val favorites by activeChild.component.favorites.subscribeAsState()
+                                val isFavorite = favorites.contains(character.id)
 
-                            IconButton(
-                                onClick = { activeChild.component.toggleFavorite(character) }
-                            ) {
-                                Icon(
-                                    imageVector = TablerIcons.Heart,
-                                    contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
-                                    tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(
-                                        alpha = 0.5f
+                                IconButton(
+                                    onClick = { activeChild.component.toggleFavorite(character) }
+                                ) {
+                                    Icon(
+                                        imageVector = TablerIcons.Heart,
+                                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                        tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(
+                                            alpha = 0.5f
+                                        )
                                     )
-                                )
+                                }
                             }
+
+                            is RootComponent.Child.DetailEpisode -> {
+                                val episode = activeChild.component.episode.value
+                                val favorites by activeChild.component.favorites.subscribeAsState()
+                                val isFavorite = favorites.contains(episode.id)
+
+                                IconButton(
+                                    onClick = { activeChild.component.toggleFavorite(episode) }
+                                ) {
+                                    Icon(
+                                        imageVector = TablerIcons.Heart,
+                                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                        tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(
+                                            alpha = 0.5f
+                                        )
+                                    )
+                                }
+                            }
+
+                            is RootComponent.Child.DetailLocation -> {
+                                val location = activeChild.component.location.value
+                                val favorites by activeChild.component.favorites.subscribeAsState()
+                                val isFavorite = favorites.contains(location.id)
+
+                                IconButton(
+                                    onClick = { activeChild.component.toggleFavorite(location) }
+                                ) {
+                                    Icon(
+                                        imageVector = TablerIcons.Heart,
+                                        contentDescription = if (isFavorite) "Remove from favorites" else "Add to favorites",
+                                        tint = if (isFavorite) Color.Red else LocalContentColor.current.copy(
+                                            alpha = 0.5f
+                                        )
+                                    )
+                                }
+                            }
+
+                            else-> {}
                         }
                     }
                 )

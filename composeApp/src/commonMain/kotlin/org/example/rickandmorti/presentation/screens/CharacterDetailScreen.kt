@@ -163,6 +163,8 @@ fun CharacterDetailScreen(
                         Column(modifier.padding(8.dp)) {
                             ItemEpisode(
                                 episode = episode,
+                                isFavorite = false,
+                                onToggleFavorite = {},
                                 onClick = { component.onEpisodeClicked(episode) }
                             )
                         }

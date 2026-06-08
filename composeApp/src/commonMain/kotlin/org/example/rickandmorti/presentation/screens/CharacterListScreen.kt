@@ -47,6 +47,7 @@ import org.example.rickandmorti.presentation.navigation.CharacterListComponent
 import org.example.rickandmorti.presentation.navigation.DefaultCharacterListComponent
 import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.util.Logger
+import kotlin.time.Duration.Companion.milliseconds
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -66,7 +67,7 @@ fun ListScreen(
 
     LaunchedEffect(query) {
         launch {
-            delay(500)
+            delay(500.milliseconds)
             debouncedQuery.value = query
         }
     }

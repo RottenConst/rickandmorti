@@ -11,9 +11,11 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.presentation.LocationViewModel
 import org.example.rickandmorti.presentation.uistate.UiStateLocation
@@ -26,15 +28,21 @@ import kotlin.time.Duration.Companion.milliseconds
 class DefaultLocationListComponent(
     componentContext: ComponentContext,
     private val locationClicked: (Location) -> Unit,
+    private val favoritesStore: FavoritesStore
 ): LocationListComponent, ComponentContext by componentContext, KoinComponent {
     private val _allLocations = MutableValue<List<Location>>(emptyList())
-    override val location: Value<List<Location>> = _allLocations
+    private val _filteredLocations = MutableValue<List<Location>>(emptyList())
+
+    private val _isFavoritesOnly = MutableValue(false)
+    override val isFavoritesOnly: Value<Boolean> = _isFavoritesOnly
+
+    override val location: Value<List<Location>> = _filteredLocations
+    override val favorites: Flow<Set<Int>> = favoritesStore.favoritesLocationsFlow
     private val _hasMorePages = MutableValue(true)
     override val hasMorePages: Value<Boolean> = _hasMorePages
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
-
     private val viewModel: LocationViewModel = get<LocationViewModel> {
         parametersOf()
     }
@@ -43,11 +51,11 @@ class DefaultLocationListComponent(
         Logger.log("ListLocationComponent: init started")
 
         viewModel.stateLocation
-            .onEach { location ->
-                when(location) {
+            .onEach { uiLocationState ->
+                when(uiLocationState) {
                     is UiStateLocation.Success -> {
-                        Logger.log("Received ${location.locations.size} locations from flow")
-                        _allLocations.update { location.locations }
+                        Logger.log("Received ${uiLocationState.locations.size} locations from flow")
+                        _allLocations.update { uiLocationState.locations }
                     }
                     is UiStateLocation.Loading -> {
                         _hasMorePages.value = true
@@ -57,6 +65,8 @@ class DefaultLocationListComponent(
                     }
                 }
             }.launchIn(scope)
+
+
 
         lifecycle.subscribe(
             onCreate = {
@@ -70,6 +80,19 @@ class DefaultLocationListComponent(
                 scope.cancel()
             }
         )
+    }
+
+    override fun toggleFavorite(locations: Location) {
+        if (favoritesStore.isFavoriteLocation(locations.id)){
+            favoritesStore.removeFavoriteLocation(locations.id)
+        }
+        else {
+            favoritesStore.addFavoriteLocation(locations.id)
+        }
+    }
+
+    fun toggleFavoriteOnly() {
+        _isFavoritesOnly.update { !it }
     }
 
     override fun onLocationClick(location: Location) = locationClicked(location)

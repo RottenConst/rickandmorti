@@ -92,6 +92,7 @@ class DefaultRootComponent(
         Config.EpisodesList -> RootComponent.Child.Episodes(
             DefaultEpisodeListComponent(
                 componentContext = componentContext,
+                favoritesStore = favoritesStore,
                 episodeClicked = { episode ->
                     navigation.push(Config.DetailEpisode(episode))
                 }
@@ -102,6 +103,7 @@ class DefaultRootComponent(
             DefaultDetailEpisodeComponent(
                 componentContext = componentContext,
                 episode = config.episode,
+                favoritesStore = favoritesStore,
                 onFinished = { navigation.pop() },
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))
@@ -112,6 +114,7 @@ class DefaultRootComponent(
         Config.LocationList -> RootComponent.Child.Locations(
             DefaultLocationListComponent(
                 componentContext = componentContext,
+                favoritesStore = favoritesStore,
                 locationClicked = { location ->
                     navigation.push(Config.DetailLocation(location))}
             )
@@ -121,6 +124,7 @@ class DefaultRootComponent(
             DefaultDetailLocationComponent(
                 componentContext = componentContext,
                 location = config.location,
+                favoritesStore = favoritesStore,
                 onFinished = { navigation.pop() },
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))

@@ -12,8 +12,7 @@ import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
 import org.example.rickandmorti.util.NetworkResult
 import org.koin.core.component.KoinComponent
-import kotlin.collections.orEmpty
-import kotlin.collections.plus
+import kotlin.time.Duration.Companion.milliseconds
 
 class EpisodesViewModel(
     private val getEpisodeUseCase: GetEpisodeUseCase,
@@ -26,9 +25,9 @@ class EpisodesViewModel(
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter
 
     private var currentPage = 1
-    private var hasMorePages = true
     private var isLoading = false
     private var isLoadingEpisode = false
+    private var hasMorePages = true
 
     init {
         loadAllEpisodes()
@@ -41,7 +40,7 @@ class EpisodesViewModel(
         isLoading = true
 
         viewModelScope.launch {
-            delay(300)
+            delay(300.milliseconds)
             when (val result = getEpisodeUseCase(name = query, page = currentPage)){
                 is NetworkResult.Success -> {
                     val newEpisodes = result.data
@@ -66,6 +65,7 @@ class EpisodesViewModel(
     }
 
     fun loadNextPage(name: String? = null) {
+        Logger.log("loadNextPage called, hasMorePages: $hasMorePages, currentPage: $currentPage")
         if (!hasMorePages) return
 
         val query = name.takeIf { it?.isNotBlank() == true }
@@ -82,6 +82,7 @@ class EpisodesViewModel(
                 is NetworkResult.Error -> {
                     _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Error")
                     hasMorePages = false
+                    Logger.log("loadNextPage error: ${result.exception.message}")
                 }
             }
         }
@@ -109,7 +110,7 @@ class EpisodesViewModel(
                     is NetworkResult.Error -> {}
                 }
                 if (index + 1 % 10 == 0) {
-                    delay(5000)
+                    delay(5000.milliseconds)
                 }
             }
             _stateCharacter.value = UiStateCharacter.Success(characters)

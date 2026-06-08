@@ -9,6 +9,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.presentation.LocationViewModel
@@ -23,11 +24,16 @@ class DefaultDetailLocationComponent(
     location: Location,
     private val characterClicked: (Character) -> Unit,
     private val onFinished: () -> Unit,
+    private val favoritesStore: FavoritesStore
 ): DetailLocationComponent, ComponentContext by componentContext, KoinComponent {
     override val location: Value<Location> = MutableValue(location)
 
+
     private val _characters = MutableValue<List<Character>>(emptyList())
     override val characters: Value<List<Character>> = _characters
+
+    private val _favorites = MutableValue<Set<Int>>(emptySet())
+    override val favorites: Value<Set<Int>> = _favorites
 
     private val _isCharactersLoading = MutableValue(true)
     override val isCharactersLoading: Value<Boolean> = _isCharactersLoading
@@ -59,8 +65,21 @@ class DefaultDetailLocationComponent(
                 }
             }.launchIn(scope)
 
+        favoritesStore.favoritesLocationsFlow
+            .onEach { set ->
+                _favorites.value = set
+            }.launchIn(scope)
+
         lifecycle.doOnDestroy {
             scope.cancel()
+        }
+    }
+
+    override fun toggleFavorite(location: Location) {
+        if (favoritesStore.isFavoriteLocation(location.id)) {
+            favoritesStore.removeFavoriteLocation(location.id)
+        } else {
+            favoritesStore.addFavoriteLocation(location.id)
         }
     }
 

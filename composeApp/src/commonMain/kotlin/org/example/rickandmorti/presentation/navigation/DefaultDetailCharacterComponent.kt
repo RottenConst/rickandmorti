@@ -66,7 +66,7 @@ class DefaultDetailCharacterComponent(
             }
             .launchIn(scope)
 
-        favoritesStore.favoritesFlow
+        favoritesStore.favoritesCharactersFlow
             .onEach { set ->
                 _favorites.value = set
             }
@@ -80,10 +80,10 @@ class DefaultDetailCharacterComponent(
     override fun onEpisodeClicked(episode: Episode) = episodeClicked(episode)
 
     override fun toggleFavorite(character: Character) {
-        if (favoritesStore.isFavorite(character.id)) {
-            favoritesStore.removeFavorite(character.id)
+        if (favoritesStore.isFavoriteCharacter(character.id)) {
+            favoritesStore.removeFavoriteCharacter(character.id)
         } else {
-            favoritesStore.addFavorite(character.id)
+            favoritesStore.addFavoriteCharacter(character.id)
         }
     }
 

@@ -51,7 +51,9 @@ interface DetailEpisodeComponent {
     val episode: Value<Episode>
     val characters: Value<List<Character>>
     val isCharactersLoading: Value<Boolean>
+    val favorites: Value<Set<Int>>
     fun onCharacterClicked(character: Character)
+    fun toggleFavorite(episode: Episode)
     fun openEpisodeWatchPage()
     fun onBackPressed()
 }
@@ -60,7 +62,9 @@ interface DetailLocationComponent {
     val location: Value<Location>
     val characters: Value<List<Character>>
     val isCharactersLoading: Value<Boolean>
+    val favorites: Value<Set<Int>>
     fun onCharacterClicked(character: Character)
+    fun toggleFavorite(location: Location)
     fun onBackPressed()
 }
 
@@ -78,18 +82,24 @@ interface CharacterListComponent {
 
 interface EpisodeListComponent {
     val episodes: Value<List<Episode>>
+    val favorites: Flow<Set<Int>>
+    val isFavoritesOnly: Value<Boolean>
     val hasMorePages: Value<Boolean>
     fun loadSearchEpisode(name: String?)
     fun onEpisodeClicked(episode: Episode)
     fun loadNextPage()
     fun loadNextPage(name: String?)
+    fun toggleFavorite(episode: Episode)
 }
 
 interface LocationListComponent {
     val location: Value<List<Location>>
+    val favorites: Flow<Set<Int>>
+    val isFavoritesOnly: Value<Boolean>
     val hasMorePages: Value<Boolean>
     fun loadSearchLocation(name: String?)
     fun onLocationClick(location: Location)
     fun loadNextPage()
     fun loadNextPage(name: String?)
+    fun toggleFavorite(locations: Location)
 }

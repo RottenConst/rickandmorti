@@ -9,6 +9,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.openInBrowser
@@ -18,18 +19,23 @@ import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.get
 import org.koin.core.parameter.parametersOf
+import kotlin.collections.emptySet
 
 class DefaultDetailEpisodeComponent(
     componentContext: ComponentContext,
     episode: Episode,
     private val characterClicked: (Character) -> Unit,
-    private val onFinished: () -> Unit
+    private val onFinished: () -> Unit,
+    private val favoritesStore: FavoritesStore
 ): DetailEpisodeComponent, ComponentContext by componentContext, KoinComponent {
 
     override val episode: Value<Episode> = MutableValue(episode)
 
     private val _characters = MutableValue<List<Character>>(emptyList())
     override val characters: Value<List<Character>> = _characters
+
+    private val _favorites = MutableValue<Set<Int>>(emptySet())
+    override val favorites: Value<Set<Int>> = _favorites
 
     private val _isCharactersLoaded = MutableValue(true)
     override val isCharactersLoading: Value<Boolean> = _isCharactersLoaded
@@ -61,6 +67,11 @@ class DefaultDetailEpisodeComponent(
             }
             .launchIn(scope)
 
+        favoritesStore.favoritesEpisodesFlow
+            .onEach { set ->
+                _favorites.value = set
+            }.launchIn(scope)
+
         lifecycle.doOnDestroy {
             scope.cancel()
         }
@@ -75,6 +86,15 @@ class DefaultDetailEpisodeComponent(
         val watchUrl = "https://rick-i-morty.com/episodes/${season}sez-${episodeNumber}seriya/"
 
         openInBrowser(watchUrl)
+    }
+
+
+    override fun toggleFavorite(episode: Episode) {
+        if (favoritesStore.isFavoriteEpisode(episode.id)) {
+            favoritesStore.removeFavoriteEpisode(episode.id)
+        } else {
+            favoritesStore.addFavoriteEpisode(episode.id)
+        }
     }
 
     override fun onBackPressed() = onFinished()
