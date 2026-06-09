@@ -116,7 +116,22 @@ class DefaultLocationListComponent(
 
     fun toggleFavoriteOnly() {
         _isFavoritesOnly.update { !it }
-        reloadLocations()
+        if (isFavoritesOnly.value) {
+            loadingMissingFavorites()
+        } else {
+            updateFiltered()
+        }
+    }
+
+    private fun loadingMissingFavorites() {
+        val favorites = currentFavorites
+        val loadedIds = _allLocations.value.map { it.id }.toSet()
+        val missingIds = favorites - loadedIds
+
+        if (missingIds.isNotEmpty()) {
+            Logger.log("Missing ${missingIds.size} favorites location, loading...")
+            viewModel.loadedLocationsByIds(missingIds.toList())
+        }
         updateFiltered()
     }
 

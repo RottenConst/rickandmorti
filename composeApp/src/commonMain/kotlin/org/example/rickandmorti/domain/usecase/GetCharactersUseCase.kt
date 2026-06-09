@@ -8,4 +8,8 @@ class GetCharactersUseCase(private val repository: CharacterRepository) {
     suspend operator fun invoke(name: String? = null, page: Int? = null): NetworkResult<List<Character>> {
         return repository.getCharacters(name = name, page = page)
     }
+
+    suspend operator fun invoke(id: Int): NetworkResult<Character?> {
+        return repository.getCharacter(id)
+    }
 }

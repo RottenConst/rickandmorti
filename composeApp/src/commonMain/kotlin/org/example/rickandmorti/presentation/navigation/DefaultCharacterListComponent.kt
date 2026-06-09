@@ -133,7 +133,23 @@ class DefaultCharacterListComponent(
 
     fun toggleFavoritesOnly() {
         _isFavoritesOnly.update { !it }
-        reloadCharacters()
+        if (isFavoritesOnly.value) {
+            loadMissingFavorites()
+        } else {
+            updateFiltered()
+        }
+    }
+
+    private fun loadMissingFavorites() {
+        val favorites = currentFavorites
+        val loadedIds = _allCharacters.value.map { it.id }.toSet()
+        val missingIds = favorites - loadedIds
+        
+        if (missingIds.isNotEmpty()) {
+            Logger.log("Missing ${missingIds.size} favorites, loading...")
+            viewModel.loadCharactersByIds(missingIds.toList())
+        }
+        
         updateFiltered()
     }
 

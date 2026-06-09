@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Character
+import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
 import org.example.rickandmorti.domain.usecase.GetEpisodeUseCase
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
@@ -103,6 +104,35 @@ class EpisodesViewModel(
         _stateEpisode.value = UiStateEpisode.Loading
 
         loadAllEpisodes(query)
+    }
+
+    fun loadEpisodesByIds(ids: List<Int>) {
+        viewModelScope.launch {
+            val currentList = (_stateEpisode.value as? UiStateEpisode.Success)?.episodes.orEmpty()
+            val currentIds = currentList.map { it.id }.toSet()
+            val idsToLoad = ids.filterNot { it in currentIds }
+            
+            if (idsToLoad.isEmpty()) return@launch
+            
+            val loadedEpisodes = mutableListOf<Episode>()
+            for (id in idsToLoad) {
+                when (val result = getEpisodeUseCase(id = id)) {
+                    is NetworkResult.Success -> {
+                        loadedEpisodes.add(result.data)
+                    }
+                    is NetworkResult.Error -> {
+                        Logger.log("Error loading episode $id: ${result.exception}")
+                    }
+                }
+            }
+            
+            if (loadedEpisodes.isNotEmpty()) {
+                val currentUpdatedList = (_stateEpisode.value as? UiStateEpisode.Success)?.episodes.orEmpty()
+                val updatedList = currentUpdatedList + loadedEpisodes
+                _stateEpisode.value = UiStateEpisode.Success(updatedList)
+                Logger.log("Loaded ${loadedEpisodes.size} missing episodes")
+            }
+        }
     }
 
     fun loadedCharacter(urls: List<String>) {

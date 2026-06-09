@@ -127,7 +127,23 @@ class DefaultEpisodeListComponent(
 
     fun toggleFavoriteOnly() {
         _isFavoritesOnly.update { !it }
-        reloadEpisodes()
+        if (isFavoritesOnly.value) {
+            loadMissingFavorites()
+        } else {
+            updateFiltered()
+        }
+    }
+
+    private fun loadMissingFavorites() {
+        val favorites = currentFavorites
+        val loadedIds = _allEpisodes.value.map { it.id }.toSet()
+        val missingIds = favorites - loadedIds
+        
+        if (missingIds.isNotEmpty()) {
+            Logger.log("Missing ${missingIds.size} favorites episodes, loading...")
+            viewModel.loadEpisodesByIds(missingIds.toList())
+        }
+        
         updateFiltered()
     }
 

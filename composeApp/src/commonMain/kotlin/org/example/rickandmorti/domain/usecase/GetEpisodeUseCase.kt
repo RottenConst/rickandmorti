@@ -10,4 +10,8 @@ class GetEpisodeUseCase(
     suspend operator fun invoke(name: String? = null, page: Int? = null): NetworkResult<List<Episode>> {
         return episodeRepository.getEpisodes(name = name, page = page)
     }
+
+    suspend operator fun invoke(id: Int): NetworkResult<Episode> {
+        return episodeRepository.getEpisode(id)
+    }
 }

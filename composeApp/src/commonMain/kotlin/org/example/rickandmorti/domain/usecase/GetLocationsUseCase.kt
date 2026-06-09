@@ -8,4 +8,8 @@ class GetLocationsUseCase(private val repository: LocationRepository) {
     suspend operator fun invoke(name: String? = null, page: Int? = null): NetworkResult<List<Location>> {
         return repository.getLocations(name = name, page = page)
     }
+
+    suspend operator fun invoke(id: Int): NetworkResult<Location> {
+        return repository.getLocation(id)
+    }
 }

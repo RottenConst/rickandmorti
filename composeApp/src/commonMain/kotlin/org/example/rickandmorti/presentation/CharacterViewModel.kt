@@ -4,6 +4,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
+import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
 import org.example.rickandmorti.domain.usecase.GetEpisodeByUrlUseCase
@@ -107,6 +108,34 @@ class CharacterViewModel(
         _stateCharacter.value = UiStateCharacter.Loading
 
         loadedAllCharacters(query)
+    }
+
+    fun loadCharactersByIds(ids: List<Int>) {
+        viewModelScope.launch {
+            val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
+            val currentIds = currentList.map { it.id }.toSet()
+            val idsToLoad = ids.filterNot { it in currentIds }
+            
+            if (idsToLoad.isEmpty()) return@launch
+            
+            val loadedChars = mutableListOf<Character>()
+            for (id in idsToLoad) {
+                when (val result = getCharactersUseCase(id = id)) {
+                    is NetworkResult.Success -> {
+                        result.data?.let { loadedChars.add(it) }
+                    }
+                    is NetworkResult.Error -> {
+                        Logger.log("Error loading character $id: ${result.exception}")
+                    }
+                }
+            }
+            
+            if (loadedChars.isNotEmpty()) {
+                val updatedCharList = currentList + loadedChars
+                _stateCharacter.value = UiStateCharacter.Success(updatedCharList)
+                Logger.log("Loaded ${loadedChars.size} missing characters")
+            }
+        }
     }
 
     fun loadEpisodes(urls: List<String>) {

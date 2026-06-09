@@ -5,6 +5,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Character
+import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
 import org.example.rickandmorti.domain.usecase.GetLocationsUseCase
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
@@ -101,6 +102,35 @@ class LocationViewModel(
         _stateLocations.value = UiStateLocation.Loading
 
         loadedAllLocations(query)
+    }
+
+    fun loadedLocationsByIds(ids: List<Int>) {
+        viewModelScope.launch {
+            val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
+            val currentIds = currentList.map { it.id }.toSet()
+            val idsToLoad = ids.filterNot { it in currentIds }
+
+            if (idsToLoad.isEmpty()) return@launch
+
+            val loadedLocation = mutableListOf<Location>()
+
+            for (id in idsToLoad) {
+                when (val result = getLocationsUseCase(id)) {
+                    is NetworkResult.Success -> {
+                        loadedLocation.add(result.data)
+                    }
+                    is NetworkResult.Error -> {
+                        Logger.log("Error loading location $id: ${result.exception}")
+                    }
+                }
+            }
+
+            if (loadedLocation.isNotEmpty()) {
+                val updatedList = currentList + loadedLocation
+                _stateLocations.value = UiStateLocation.Success(updatedList)
+                Logger.log("Loaded ${loadedLocation.size} missing locations")
+            }
+        }
     }
 
     fun loadResidents(urls: List<String>) {
