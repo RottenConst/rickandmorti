@@ -81,7 +81,7 @@ fun ListScreen(
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
             val lastVisibleItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            !loadingMore && totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
+            !loadingMore && hasMorePages && totalItems > 0 && lastVisibleItemIndex >= totalItems - 5
         }
     }
 
@@ -195,13 +195,6 @@ fun ListScreen(
                     )
                 }
             }
-        }
-    }
-
-    // Сброс флага после подгрузки
-    LaunchedEffect(state) {
-        if (state.isNotEmpty()) {
-            loadingMore = false
         }
     }
 }

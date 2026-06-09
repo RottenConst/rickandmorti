@@ -46,7 +46,11 @@ class EpisodesViewModel(
                     val newEpisodes = result.data
                     if (newEpisodes.isNotEmpty()) {
                         val currentList = (_stateEpisode.value as? UiStateEpisode.Success)?.episodes.orEmpty()
-                        _stateEpisode.value = UiStateEpisode.Success(currentList + newEpisodes)
+                        val uniqueNewEpisodes = newEpisodes.filterNot { existingEp ->
+                            currentList.any { it.id == existingEp.id }
+                        }
+                        val updatedList = currentList + uniqueNewEpisodes
+                        _stateEpisode.value = UiStateEpisode.Success(updatedList)
                         currentPage++
                         Logger.log(message = "VM: loaded ${newEpisodes.size} episods, total: ${currentList.size + newEpisodes.size}")
                     } else {
@@ -75,7 +79,11 @@ class EpisodesViewModel(
                 is NetworkResult.Success -> {
                     val newEpisodes = result.data
                     val currentList = (_stateEpisode.value as? UiStateEpisode.Success)?.episodes.orEmpty()
-                    _stateEpisode.value = UiStateEpisode.Success(currentList + newEpisodes)
+                    val uniqueNewEpisodes = newEpisodes.filterNot { ep ->
+                        currentList.any { it.id == ep.id }
+                    }
+                    val updatedList = currentList + uniqueNewEpisodes
+                    _stateEpisode.value = UiStateEpisode.Success(updatedList)
                     currentPage++
                     hasMorePages = newEpisodes.isNotEmpty()
                 }
@@ -94,7 +102,7 @@ class EpisodesViewModel(
         hasMorePages = true
         _stateEpisode.value = UiStateEpisode.Loading
 
-        loadNextPage(query)
+        loadAllEpisodes(query)
     }
 
     fun loadedCharacter(urls: List<String>) {

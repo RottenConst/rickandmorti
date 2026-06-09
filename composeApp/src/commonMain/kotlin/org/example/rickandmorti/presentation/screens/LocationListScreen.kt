@@ -42,7 +42,6 @@ import compose.icons.tablericons.Search
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import org.example.rickandmorti.presentation.navigation.DefaultEpisodeListComponent
 import org.example.rickandmorti.presentation.navigation.DefaultLocationListComponent
 import org.example.rickandmorti.presentation.navigation.LocationListComponent
 import org.example.rickandmorti.presentation.screens.items.ItemLocation
@@ -93,6 +92,12 @@ fun LocationListScreen(
                     component.loadNextPage(debouncedQuery.value.takeIf { it.isNotBlank() })
                 }
             }
+    }
+
+    LaunchedEffect(locations) {
+        if (locations.isNotEmpty()) {
+            loadingMore = false
+        }
     }
 
     Column(
@@ -183,12 +188,6 @@ fun LocationListScreen(
                     )
                 }
             }
-        }
-    }
-
-    LaunchedEffect(locations) {
-        if (locations.isNotEmpty()) {
-            loadingMore = false
         }
     }
 }

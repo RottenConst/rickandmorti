@@ -12,6 +12,7 @@ import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
 import org.example.rickandmorti.util.NetworkResult
 import org.koin.core.component.KoinComponent
+import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
     private val getCharactersUseCase: GetCharactersUseCase,
@@ -36,19 +37,24 @@ class CharacterViewModel(
     fun loadedAllCharacters(name: String? = null){
         val query = name.takeIf { it?.isNotBlank() == true }
         Logger.log("VM Searched for $query")
-        if (isLoading || !hasMorePages) return
+        if (isLoading) return
         isLoading = true
 
         viewModelScope.launch {
-            delay(300)
+            delay(300.milliseconds)
 
             when (val result = getCharactersUseCase(name = query, page = currentPage)) {
                 is NetworkResult.Success -> {
                     val newChars = result.data
                     if (newChars.isNotEmpty()) {
                         val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
-                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars)
+                        val uniqueNewCharacter = newChars.filterNot { existingChar ->
+                            currentList.any { it.id == existingChar.id }
+                        }
+                        val updatedCharList = currentList + uniqueNewCharacter
+                        _stateCharacter.value = UiStateCharacter.Success(updatedCharList)
                         currentPage++
+                        hasMorePages = newChars.isNotEmpty()
                         Logger.log(message = "VM: loaded ${newChars.size} chars, total: ${currentList.size + newChars.size}")
                     } else {
                         hasMorePages = false
@@ -65,16 +71,24 @@ class CharacterViewModel(
     }
 
     fun loadNextPage(name: String? = null) {
-        if (!hasMorePages) return
+        if (!hasMorePages) {
+            Logger.log("❌ loadNextPage: hasMorePages = false, return")
+            return
+        }
 
         val query = name.takeIf { it?.isNotBlank() == true }
 
         viewModelScope.launch {
             when (val result = getCharactersUseCase(name = query, page = currentPage)) {
                 is NetworkResult.Success -> {
-                    val newChars = result.data
                     val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
-                    _stateCharacter.value = UiStateCharacter.Success(currentList + newChars)
+                    val currentIds = currentList.map { it.id }.toSet()
+
+                    val newChars = result.data
+                    val uniqueNewCharacter = newChars.filterNot { it.id in currentIds }
+
+                    val updatedCharsList = currentList + uniqueNewCharacter
+                    _stateCharacter.value = UiStateCharacter.Success(updatedCharsList)
                     currentPage++
                     hasMorePages = newChars.isNotEmpty()
                 }
@@ -92,7 +106,7 @@ class CharacterViewModel(
         hasMorePages = true
         _stateCharacter.value = UiStateCharacter.Loading
 
-        loadNextPage(query)
+        loadedAllCharacters(query)
     }
 
     fun loadEpisodes(urls: List<String>) {
@@ -108,7 +122,7 @@ class CharacterViewModel(
                     is NetworkResult.Error -> {}
                 }
                 if (index + 1 % 10 == 0) {
-                    delay(5000)
+                    delay(5000.milliseconds)
                 }
             }
             _stateEpisode.value = UiStateEpisode.Success(episodes)

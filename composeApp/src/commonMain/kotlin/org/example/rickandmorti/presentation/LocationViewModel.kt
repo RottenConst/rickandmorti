@@ -6,13 +6,13 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
-import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
 import org.example.rickandmorti.domain.usecase.GetLocationsUseCase
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.presentation.uistate.UiStateLocation
 import org.example.rickandmorti.util.Logger
 import org.example.rickandmorti.util.NetworkResult
 import org.koin.core.component.KoinComponent
+import kotlin.time.Duration.Companion.milliseconds
 
 class LocationViewModel(
     private val getLocationsUseCase: GetLocationsUseCase,
@@ -26,9 +26,12 @@ class LocationViewModel(
 
     private var currentPage = 1
     private var isLoading = false
-
     private var isLoadingCharacters = false
     private var hasMorePages = true
+
+    init {
+        loadedAllLocations()
+    }
 
     fun loadedAllLocations(name: String? = null) {
         val query = name.takeIf { it?.isNotBlank() == true }
@@ -37,15 +40,19 @@ class LocationViewModel(
         isLoading = true
 
         viewModelScope.launch {
-            delay(300)
+            delay(300.milliseconds)
             when(val result = getLocationsUseCase(name = query, page = currentPage)) {
                 is NetworkResult.Success -> {
                     val newLocation = result.data
                     if (newLocation.isNotEmpty()) {
                         val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
-                        _stateLocations.value = UiStateLocation.Success(currentList + newLocation)
+                        val uniqueNewLocation = newLocation.filterNot { existingLocation ->
+                            currentList.any {it.id == existingLocation.id}
+                        }
+                        val updatedList = currentList + uniqueNewLocation
+                        _stateLocations.value = UiStateLocation.Success(updatedList)
                         currentPage++
-                        Logger.log("VM Loaded ${newLocation.size} location, total $currentList")
+                        Logger.log("VM Loaded ${newLocation.size} location, total ${currentList.size + newLocation.size}")
                     } else {
                         hasMorePages = false
                     }
@@ -53,6 +60,7 @@ class LocationViewModel(
                 is NetworkResult.Error -> {
                     _stateLocations.value = UiStateLocation.Error(result.exception.message ?: "unknown error")
                     hasMorePages = false
+                    Logger.log("VM Error: ${result.exception.message}")
                 }
             }
             isLoading = false
@@ -69,7 +77,11 @@ class LocationViewModel(
                 is NetworkResult.Success -> {
                     val newLocation = result.data
                     val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
-                    _stateLocations.value = UiStateLocation.Success(currentList + newLocation)
+                    val uniqueNewLocation = newLocation.filterNot { location ->
+                        currentList.any { it.id == location.id }
+                    }
+                    val updatedNewLocation = currentList + uniqueNewLocation
+                    _stateLocations.value = UiStateLocation.Success(updatedNewLocation)
                     currentPage++
                     hasMorePages = newLocation.isNotEmpty()
                 }
@@ -88,7 +100,7 @@ class LocationViewModel(
         hasMorePages = true
         _stateLocations.value = UiStateLocation.Loading
 
-        loadNextPage()
+        loadedAllLocations(query)
     }
 
     fun loadResidents(urls: List<String>) {
@@ -104,7 +116,7 @@ class LocationViewModel(
                     is NetworkResult.Error -> {}
                 }
                 if (index + 1 % 10 == 0) {
-                    delay(5000)
+                    delay(5000.milliseconds)
                 }
             }
             _stateCharacter.value = UiStateCharacter.Success(character)

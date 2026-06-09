@@ -12,6 +12,7 @@ import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
@@ -41,6 +42,8 @@ class DefaultLocationListComponent(
     private val _hasMorePages = MutableValue(true)
     override val hasMorePages: Value<Boolean> = _hasMorePages
 
+    private var currentFavorites: Set<Int> = emptySet()
+
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
     private var loadMoreJob: Job? = null
     private val viewModel: LocationViewModel = get<LocationViewModel> {
@@ -50,12 +53,20 @@ class DefaultLocationListComponent(
     init {
         Logger.log("ListLocationComponent: init started")
 
+        favoritesStore.favoritesLocationsFlow
+            .distinctUntilChanged()
+            .onEach { favorites ->
+                currentFavorites = favorites
+                updateFiltered()
+            }.launchIn(scope)
+
         viewModel.stateLocation
             .onEach { uiLocationState ->
                 when(uiLocationState) {
                     is UiStateLocation.Success -> {
                         Logger.log("Received ${uiLocationState.locations.size} locations from flow")
                         _allLocations.update { uiLocationState.locations }
+                        updateFiltered()
                     }
                     is UiStateLocation.Loading -> {
                         _hasMorePages.value = true
@@ -66,20 +77,32 @@ class DefaultLocationListComponent(
                 }
             }.launchIn(scope)
 
-
-
         lifecycle.subscribe(
             onCreate = {
                 Logger.log("ListLocationComponent: onCreate")
-                scope.launch {
-                    viewModel.loadedAllLocations()
-                }
+                reloadLocations()
+                _hasMorePages.value = true
             },
             onDestroy = {
                 Logger.log("ListLocationComponent: destroyed")
                 scope.cancel()
             }
         )
+    }
+
+    private fun updateFiltered() {
+        val all = _allLocations.value
+        val isFavoriteOnly = _isFavoritesOnly.value
+        val filtered = if (isFavoriteOnly) {
+            all.filter { currentFavorites.contains(it.id) }
+        } else {
+            all
+        }
+        _filteredLocations.value = filtered
+    }
+
+    private fun reloadLocations(name: String? = null) {
+        viewModel.loadedAllLocations(name)
     }
 
     override fun toggleFavorite(locations: Location) {
@@ -93,16 +116,14 @@ class DefaultLocationListComponent(
 
     fun toggleFavoriteOnly() {
         _isFavoritesOnly.update { !it }
+        reloadLocations()
+        updateFiltered()
     }
 
     override fun onLocationClick(location: Location) = locationClicked(location)
 
     override fun loadNextPage() {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            delay(100.milliseconds)
-            viewModel.loadedAllLocations()
-        }
+        reloadLocations()
     }
 
     override fun loadSearchLocation(name: String?) {
@@ -114,10 +135,6 @@ class DefaultLocationListComponent(
     }
 
     override fun loadNextPage(name: String?) {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            delay(300.milliseconds)
-            viewModel.loadNextPage(name)
-        }
+        viewModel.loadNextPage(name)
     }
 }

@@ -86,7 +86,7 @@ class DefaultEpisodeListComponent(
         lifecycle.subscribe(
             onCreate = {
                 Logger.log("Episode list Component: onCreate")
-                // loadAllEpisodes уже вызван в init, обновляем hasMorePages
+                reloadEpisodes()
                 _hasMorePages.value = true
             },
             onDestroy = {
@@ -107,14 +107,14 @@ class DefaultEpisodeListComponent(
         _filteredEpisodes.value = filtered
     }
 
+    private fun reloadEpisodes(name: String? = null) {
+        viewModel.loadAllEpisodes(name)
+    }
+
     override fun onEpisodeClicked(episode: Episode) = episodeClicked(episode)
 
     override fun loadNextPage() {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            delay(100.milliseconds)
-            viewModel.loadAllEpisodes()
-        }
+        reloadEpisodes() // при ручном обновлении (pull-to-refresh) — сбрасываем
     }
 
     override fun toggleFavorite(episode: Episode) {
@@ -127,15 +127,12 @@ class DefaultEpisodeListComponent(
 
     fun toggleFavoriteOnly() {
         _isFavoritesOnly.update { !it }
+        reloadEpisodes()
         updateFiltered()
     }
 
     override fun loadNextPage(name: String?) {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            delay(300.milliseconds)
-            viewModel.loadNextPage(name)
-        }
+        viewModel.loadNextPage(name)
     }
 
     override fun loadSearchEpisode(name: String?) {

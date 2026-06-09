@@ -90,6 +90,7 @@ class DefaultCharacterListComponent(
         lifecycle.subscribe(
             onCreate = {
                 Logger.log("ListComponent: onCreate")
+                reloadCharacters()
                 scope.launch {
                     viewModel.loadedAllCharacters()
                 }
@@ -111,16 +112,15 @@ class DefaultCharacterListComponent(
         _filteredCharacters.value = filtered
     }
 
+    private fun reloadCharacters(name: String? = null) {
+        viewModel.loadedAllCharacters(name)
+    }
+
     override fun onCharacterClicked(character: Character) = characterClicked(character)
 
     // Метод для подгрузки следующей страницы
     override fun loadNextPage() {
-        loadMoreJob?.cancel()
-        loadMoreJob = scope.launch {
-            // Небольшая задержка, чтобы избежать множественных вызовов
-            delay(100.milliseconds)
-            viewModel.loadedAllCharacters()
-        }
+        reloadCharacters()
     }
 
     override fun toggleFavorite(character: Character) {
@@ -133,6 +133,7 @@ class DefaultCharacterListComponent(
 
     fun toggleFavoritesOnly() {
         _isFavoritesOnly.update { !it }
+        reloadCharacters()
         updateFiltered()
     }
 
