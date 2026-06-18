@@ -11,42 +11,58 @@ import org.example.rickandmorti.data.dto.LocationDto
 
 class RickAndMortyApi(private val client: HttpClient) {
     suspend fun getAllCharacters(name: String? = null, page: Int? = null): List<CharacterDto> {
-        return client.get("/api/character") {
-            if (page != null) {
-                parameter("page", page)
+        return try {
+            val response = client.get("/api/character") {
+                if (page != null) {
+                    parameter("page", page)
+                }
+                if (name != null) {
+                    parameter("name", name)
+                }
             }
-            if (name != null) {
-                parameter("name", name)
-            }
-        }.body<Response<CharacterDto>>().results
+            response.body<Response<CharacterDto>>().results
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch characters (name=$name, page=$page): ${e.message}", e)
+        }
     }
 
     suspend fun getAllEpisodes(
         name: String? = null,
         page: Int? = null
     ): List<EpisodeDto> {
-        return client.get("/api/episode") {
-            if (page != null) {
-                parameter("page", page)
+        return try {
+            val response = client.get("/api/episode") {
+                if (page != null) {
+                    parameter("page", page)
+                }
+                if (name != null) {
+                    parameter("name", name)
+                }
             }
-            if (name != null) {
-                parameter("name", name)
-            }
-        }.body<Response<EpisodeDto>>().results
+            val body = response.body<Response<EpisodeDto>>()
+            body.results
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch episodes (name=$name, page=$page): ${e.message}", e)
+        }
     }
 
     suspend fun getAllLocations(
         name: String? = null,
         page: Int? = null
     ): List<LocationDto> {
-        return client.get("/api/location") {
-            if (page != null) {
-                parameter("page", page)
+        return try {
+            val response = client.get("/api/location") {
+                if (page != null) {
+                    parameter("page", page)
+                }
+                if (name != null) {
+                    parameter("name", name)
+                }
             }
-            if (name != null) {
-                parameter("name", name)
-            }
-        }.body<Response<LocationDto>>().results
+            response.body<Response<LocationDto>>().results
+        } catch (e: Exception) {
+            throw Exception("Failed to fetch locations (name=$name, page=$page): ${e.message}", e)
+        }
     }
 
     suspend fun getCharacter(id: Int): CharacterDto {

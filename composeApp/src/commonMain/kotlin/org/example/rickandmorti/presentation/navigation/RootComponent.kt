@@ -85,6 +85,7 @@ interface EpisodeListComponent {
     val favorites: Flow<Set<Int>>
     val isFavoritesOnly: Value<Boolean>
     val hasMorePages: Value<Boolean>
+    val isLoadingFavorites: Value<Boolean>
     fun loadSearchEpisode(name: String?)
     fun onEpisodeClicked(episode: Episode)
     fun loadNextPage()
@@ -97,6 +98,7 @@ interface LocationListComponent {
     val favorites: Flow<Set<Int>>
     val isFavoritesOnly: Value<Boolean>
     val hasMorePages: Value<Boolean>
+    val isLoadingFavorites: Value<Boolean>
     fun loadSearchLocation(name: String?)
     fun onLocationClick(location: Location)
     fun loadNextPage()

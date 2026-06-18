@@ -42,6 +42,9 @@ class DefaultLocationListComponent(
     private val _hasMorePages = MutableValue(true)
     override val hasMorePages: Value<Boolean> = _hasMorePages
 
+    private val _isLoadingFavorites = MutableValue(false)
+    override val isLoadingFavorites: Value<Boolean> = _isLoadingFavorites
+
     private var currentFavorites: Set<Int> = emptySet()
 
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.Main)
@@ -67,6 +70,7 @@ class DefaultLocationListComponent(
                         Logger.log("Received ${uiLocationState.locations.size} locations from flow")
                         _allLocations.update { uiLocationState.locations }
                         updateFiltered()
+                        _hasMorePages.value = viewModel.hasMorePages
                     }
                     is UiStateLocation.Loading -> {
                         _hasMorePages.value = true
@@ -99,6 +103,7 @@ class DefaultLocationListComponent(
             all
         }
         _filteredLocations.value = filtered
+        if (isFavoriteOnly && _isLoadingFavorites.value) _isLoadingFavorites.value = false
     }
 
     private fun reloadLocations(name: String? = null) {
@@ -130,7 +135,10 @@ class DefaultLocationListComponent(
 
         if (missingIds.isNotEmpty()) {
             Logger.log("Missing ${missingIds.size} favorites location, loading...")
+            _isLoadingFavorites.value = true
             viewModel.loadedLocationsByIds(missingIds.toList())
+        } else {
+            updateFiltered()
         }
         updateFiltered()
     }

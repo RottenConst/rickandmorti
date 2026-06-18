@@ -29,7 +29,7 @@ class CharacterViewModel(
     private var isLoading = false
 
     private var isLoadingEpisode = false
-    private var hasMorePages = true
+    var hasMorePages = true
 
     init {
         loadedAllCharacters()
@@ -135,6 +135,7 @@ class CharacterViewModel(
                 _stateCharacter.value = UiStateCharacter.Success(updatedCharList)
                 Logger.log("Loaded ${loadedChars.size} missing characters")
             }
+            hasMorePages = false
         }
     }
 

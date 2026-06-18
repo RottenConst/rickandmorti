@@ -58,6 +58,7 @@ fun LocationListScreen(
 
     val locations by component.location.subscribeAsState()
     val isFavoritesOnly by component.isFavoritesOnly.subscribeAsState()
+    val isLoadingFavorites by component.isLoadingFavorites.subscribeAsState()
     val favorites by component.favorites.collectAsState(emptySet())
 
     val listState = rememberLazyListState()
@@ -78,7 +79,7 @@ fun LocationListScreen(
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
             val lastVisibilityItemIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            !loadingMore && totalItems > 0 && lastVisibilityItemIndex >= totalItems - 5
+            !loadingMore && hasMorePages && totalItems > 0 && lastVisibilityItemIndex >= totalItems - 5
         }
     }
 
@@ -178,7 +179,18 @@ fun LocationListScreen(
             }
 
 
-            if (loadingMore && hasMorePages) {
+            if (loadingMore && hasMorePages && !isFavoritesOnly) {
+                item {
+                    CircularProgressIndicator(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(16.dp)
+                            .wrapContentSize()
+                    )
+                }
+            }
+
+            if (isFavoritesOnly && isLoadingFavorites && locations.isEmpty()) {
                 item {
                     CircularProgressIndicator(
                         modifier = Modifier

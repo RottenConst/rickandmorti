@@ -28,7 +28,7 @@ class LocationViewModel(
     private var currentPage = 1
     private var isLoading = false
     private var isLoadingCharacters = false
-    private var hasMorePages = true
+    var hasMorePages = true
 
     init {
         loadedAllLocations()
@@ -53,6 +53,7 @@ class LocationViewModel(
                         val updatedList = currentList + uniqueNewLocation
                         _stateLocations.value = UiStateLocation.Success(updatedList)
                         currentPage++
+                        hasMorePages = newLocation.isNotEmpty()
                         Logger.log("VM Loaded ${newLocation.size} location, total ${currentList.size + newLocation.size}")
                     } else {
                         hasMorePages = false
@@ -130,6 +131,7 @@ class LocationViewModel(
                 _stateLocations.value = UiStateLocation.Success(updatedList)
                 Logger.log("Loaded ${loadedLocation.size} missing locations")
             }
+            hasMorePages = false
         }
     }
 

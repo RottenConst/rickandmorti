@@ -41,6 +41,9 @@ class DefaultEpisodeListComponent(
     private val _hasMorePages = MutableValue(true)
     override val hasMorePages: Value<Boolean> = _hasMorePages
 
+    private val _isLoadingFavorites = MutableValue(false)
+    override val isLoadingFavorites: Value<Boolean> = _isLoadingFavorites
+
     override val episodes: Value<List<Episode>> = _filteredEpisodes
     override val favorites: Flow<Set<Int>> = favoritesStore.favoritesEpisodesFlow
     private var currentFavorites: Set<Int> = emptySet()
@@ -53,6 +56,15 @@ class DefaultEpisodeListComponent(
     init {
         Logger.log("List Episode: init started")
 
+        // Слушаем изменения избранного
+        favoritesStore.favoritesEpisodesFlow
+            .distinctUntilChanged()
+            .onEach { favorites ->
+                currentFavorites = favorites
+                updateFiltered()
+            }
+            .launchIn(scope)
+
         // Слушаем изменения эпизодов
         viewModel.stateEpisode
             .onEach { state ->
@@ -60,6 +72,8 @@ class DefaultEpisodeListComponent(
                     is UiStateEpisode.Success -> {
                         Logger.log("Received ${state.episodes.size} episodes from Flow")
                         _allEpisodes.update { state.episodes }
+                        updateFiltered()
+                        _hasMorePages.value = viewModel.hasMorePages
                     }
                     is UiStateEpisode.Loading -> {
                         _hasMorePages.value = true
@@ -68,15 +82,6 @@ class DefaultEpisodeListComponent(
                         _hasMorePages.value = false
                     }
                 }
-            }
-            .launchIn(scope)
-
-        // Слушаем изменения избранного
-        favoritesStore.favoritesEpisodesFlow
-            .distinctUntilChanged()
-            .onEach { favorites ->
-                currentFavorites = favorites
-                updateFiltered()
             }
             .launchIn(scope)
 
@@ -105,6 +110,10 @@ class DefaultEpisodeListComponent(
             all.filter { currentFavorites.contains(it.id) }
         }
         _filteredEpisodes.value = filtered
+        // Сброс флага загрузки избранного после обновления фильтрованного списка
+        if (isFavoritesOnly && _isLoadingFavorites.value) {
+            _isLoadingFavorites.value = false
+        }
     }
 
     private fun reloadEpisodes(name: String? = null) {
@@ -141,13 +150,18 @@ class DefaultEpisodeListComponent(
         
         if (missingIds.isNotEmpty()) {
             Logger.log("Missing ${missingIds.size} favorites episodes, loading...")
+            _isLoadingFavorites.value = true
             viewModel.loadEpisodesByIds(missingIds.toList())
+        } else {
+            updateFiltered()
         }
-        
-        updateFiltered()
     }
 
     override fun loadNextPage(name: String?) {
+        if (!hasMorePages.value) {
+            Logger.log("loadNextPage skipped: no more pages")
+            return
+        }
         viewModel.loadNextPage(name)
     }
 

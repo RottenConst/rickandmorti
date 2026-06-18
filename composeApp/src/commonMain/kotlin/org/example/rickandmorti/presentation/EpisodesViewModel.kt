@@ -28,7 +28,7 @@ class EpisodesViewModel(
     private var currentPage = 1
     private var isLoading = false
     private var isLoadingEpisode = false
-    private var hasMorePages = true
+    var hasMorePages = true
 
     init {
         loadAllEpisodes()
@@ -53,6 +53,7 @@ class EpisodesViewModel(
                         val updatedList = currentList + uniqueNewEpisodes
                         _stateEpisode.value = UiStateEpisode.Success(updatedList)
                         currentPage++
+                        hasMorePages = newEpisodes.isNotEmpty()
                         Logger.log(message = "VM: loaded ${newEpisodes.size} episods, total: ${currentList.size + newEpisodes.size}")
                     } else {
                         hasMorePages = false
@@ -89,7 +90,7 @@ class EpisodesViewModel(
                     hasMorePages = newEpisodes.isNotEmpty()
                 }
                 is NetworkResult.Error -> {
-                    _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Error")
+                    _stateEpisode.value = UiStateEpisode.Error(result.exception.message ?: "Error")
                     hasMorePages = false
                     Logger.log("loadNextPage error: ${result.exception.message}")
                 }
@@ -132,6 +133,7 @@ class EpisodesViewModel(
                 _stateEpisode.value = UiStateEpisode.Success(updatedList)
                 Logger.log("Loaded ${loadedEpisodes.size} missing episodes")
             }
+            hasMorePages = false
         }
     }
 

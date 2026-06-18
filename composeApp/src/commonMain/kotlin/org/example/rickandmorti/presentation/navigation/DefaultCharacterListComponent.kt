@@ -63,6 +63,7 @@ class DefaultCharacterListComponent(
                     is UiStateCharacter.Success -> {
                         Logger.log("Received ${state.characters.size} characters from Flow")
                         _allCharacters.update { state.characters }
+                        _hasMorePages.value = viewModel.hasMorePages
                     }
                     is UiStateCharacter.Loading -> {
                         _hasMorePages.value = true
