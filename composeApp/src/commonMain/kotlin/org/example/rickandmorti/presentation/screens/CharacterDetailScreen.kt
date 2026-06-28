@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -17,11 +18,19 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Snackbar
+import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.BottomCenter
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
@@ -30,6 +39,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import coil3.compose.AsyncImage
 import com.arkivanov.decompose.extensions.compose.subscribeAsState
+import kotlinx.coroutines.launch
 import org.example.rickandmorti.presentation.navigation.DetailCharacterComponent
 import org.example.rickandmorti.presentation.screens.items.ItemEpisode
 import org.example.rickandmorti.util.Logger
@@ -44,6 +54,8 @@ fun CharacterDetailScreen(
     val episodes by component.episodes.subscribeAsState()
     val isEpisodeLoading by component.isEpisodeLoading.subscribeAsState()
 
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
 
     // 🟩 Отладка: логируем изменения состояния
     LaunchedEffect(episodes, isEpisodeLoading) {
@@ -61,116 +73,157 @@ fun CharacterDetailScreen(
         }
     }
 
-    Column(
-        horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp),
-        modifier = modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp, vertical = 8.dp)
+    Box(
+        modifier = Modifier.fillMaxSize().padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
-        Card(
-            modifier = Modifier
-                .padding(8.dp)
-                .wrapContentWidth(),
-            elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
+            modifier = modifier
+                .fillMaxSize()
+//                .padding(horizontal = 16.dp, vertical = 8.dp)
         ) {
-            Row(
-                modifier = modifier.padding(16.dp),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                AsyncImage(
-                    model = character.image,
-                    contentDescription = "character image",
-                    modifier = Modifier.padding(8.dp).clip(CircleShape).size(height = 120.dp, width = 120.dp),
-                    contentScale = ContentScale.Crop
-                )
-                Column(
-                    modifier = modifier.padding(8.dp),
-                    verticalArrangement = Arrangement.Center
-                ) {
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = "Status: ",
-                            fontWeight = FontWeight.Bold)
-                        Text(character.status)
-                        Box(
-                            modifier = Modifier
-                                .padding(8.dp)
-                                .size(8.dp)
-                                .clip(CircleShape)
-                                .background(
-                                    color = when(character.status) {
-                                        "Alive" -> Color.Green
-                                        "Dead" -> Color.Red
-                                        else -> Color.Gray
-                                    }),
-                        )
-                    }
-                    Row {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = "Species: ",
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(character.species)
-                    }
-                    Row {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = "Gender: ",
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(character.gender)
-                    }
-                    Row {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = "Origin: ",
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(character.origin.name, maxLines = 1)
-                    }
-                    Row {
-                        Text(
-                            modifier = Modifier.padding(horizontal = 8.dp),
-                            text = "Location: ",
-                            fontWeight = FontWeight.Bold
-                        )
-                        Text(character.location.name, maxLines = 1)
-                    }
 
+
+            Card(
+                modifier = Modifier
+                    .padding(8.dp)
+                    .wrapContentWidth(),
+                elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
+            ) {
+                Row(
+                    modifier = modifier.padding(16.dp),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    AsyncImage(
+                        model = character.image,
+                        contentDescription = "character image",
+                        modifier = Modifier.padding(8.dp).clip(CircleShape)
+                            .size(height = 120.dp, width = 120.dp),
+                        contentScale = ContentScale.Crop
+                    )
+                    Column(
+                        modifier = modifier.padding(8.dp),
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "Status: ",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(character.status)
+                            Box(
+                                modifier = Modifier
+                                    .padding(8.dp)
+                                    .size(8.dp)
+                                    .clip(CircleShape)
+                                    .background(
+                                        color = when (character.status) {
+                                            "Alive" -> Color.Green
+                                            "Dead" -> Color.Red
+                                            else -> Color.Gray
+                                        }
+                                    ),
+                            )
+                        }
+                        Row {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "Species: ",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(character.species)
+                        }
+                        Row {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "Gender: ",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(character.gender)
+                        }
+                        Row {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "Origin: ",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                modifier = Modifier.clickable {
+                                    if (character.origin.name.lowercase() == "unknown") {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Unknown origin")
+                                        }
+                                    } else {
+                                        component.onLocationClicked(character.origin.url)
+                                    }
+                                },
+                                text = character.origin.name, maxLines = 1
+                            )
+                        }
+                        Row {
+                            Text(
+                                modifier = Modifier.padding(horizontal = 8.dp),
+                                text = "Location: ",
+                                fontWeight = FontWeight.Bold
+                            )
+                            Text(
+                                modifier = Modifier.clickable {
+                                    if (character.location.name.lowercase() == "unknown") {
+                                        scope.launch {
+                                            snackbarHostState.showSnackbar("Unknown location")
+                                        }
+                                    } else {
+                                        component.onLocationClicked(character.location.url)
+                                    }
+                                },
+                                text = character.location.name, maxLines = 1
+                            )
+                        }
+
+                    }
                 }
             }
-        }
-        // 🔹 Отображение эпизодов
-        Text("Episodes:", style = MaterialTheme.typography.titleMedium)
+            // 🔹 Отображение эпизодов
+            Text("Episodes:", style = MaterialTheme.typography.titleMedium)
 
-        if (isEpisodeLoading) {
-            Text("Loading episodes...")
-        } else {
-            if (episodes.isEmpty()) {
-                Text("No episodes found.")
+            if (isEpisodeLoading) {
+                Text("Loading episodes...")
             } else {
-                LazyColumn(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    items(episodes) { episode ->
-                        Column(modifier.padding(8.dp)) {
-                            ItemEpisode(
-                                episode = episode,
-                                isFavorite = false,
-                                onToggleFavorite = {},
-                                onClick = { component.onEpisodeClicked(episode) }
-                            )
+                if (episodes.isEmpty()) {
+                    Text("No episodes found.")
+                } else {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxWidth(),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        items(episodes) { episode ->
+                            Column(modifier.padding(8.dp)) {
+                                ItemEpisode(
+                                    episode = episode,
+                                    isFavorite = false,
+                                    onToggleFavorite = {},
+                                    onClick = { component.onEpisodeClicked(episode) }
+                                )
+                            }
                         }
                     }
                 }
             }
+        }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier.align(BottomCenter)
+        ) { snackbarData ->
+            Snackbar(
+                modifier = Modifier.padding(8.dp),
+                snackbarData = snackbarData
+            )
         }
     }
 }

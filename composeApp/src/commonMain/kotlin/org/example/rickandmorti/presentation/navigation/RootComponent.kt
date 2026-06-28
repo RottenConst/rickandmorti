@@ -43,6 +43,7 @@ interface DetailCharacterComponent {
     val isEpisodeLoading: Value<Boolean>
     val favorites: Value<Set<Int>>
     fun onEpisodeClicked(episode: Episode)
+    fun onLocationClicked(locationUrl: String)
     fun toggleFavorite(character: Character)
     fun onBackPressed()
 }

@@ -84,6 +84,9 @@ class DefaultRootComponent(
                 favoritesStore = favoritesStore,
                 episodeClicked = { episode ->
                     navigation.push(Config.DetailEpisode(episode))
+                },
+                onLocationToScreenClicked = { location ->
+                    navigation.push(Config.DetailLocation(location))
                 }
             )
         )

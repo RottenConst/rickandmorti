@@ -6,8 +6,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
 import org.example.rickandmorti.domain.usecase.GetEpisodeByUrlUseCase
+import org.example.rickandmorti.domain.usecase.GetLocationByUrlUseCase
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
@@ -17,13 +19,19 @@ import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
     private val getCharactersUseCase: GetCharactersUseCase,
-    private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase
+    private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase,
+    private val getLocationByUrlUseCase: GetLocationByUrlUseCase
 ) : BaseViewModel(), KoinComponent {
     private val _stateCharacter = MutableStateFlow<UiStateCharacter>(UiStateCharacter.Loading)
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter
 
     private val _stateEpisode = MutableStateFlow<UiStateEpisode>(UiStateEpisode.Loading)
     val stateEpisode: StateFlow<UiStateEpisode> = _stateEpisode
+
+    private val _location = MutableStateFlow<Location?>(null)
+    val location: StateFlow<Location?> = _location
+
+    private val _origin = MutableStateFlow<Location?>(null)
 
     private var currentPage = 1
     private var isLoading = false
@@ -96,6 +104,23 @@ class CharacterViewModel(
                 is NetworkResult.Error -> {
                     _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Error")
                     hasMorePages = false
+                }
+            }
+        }
+    }
+
+    fun getLocation(locationUrl: String, isOrigin: Boolean) {
+        viewModelScope.launch {
+            when (val result = getLocationByUrlUseCase(locationUrl)) {
+                is NetworkResult.Success -> {
+                    if (isOrigin) {
+                        _origin.value = result.data
+                    } else {
+                        _location.value = result.data
+                    }
+                }
+                is NetworkResult.Error -> {
+                    Logger.log("Error loading location by url: ${result.exception}")
                 }
             }
         }

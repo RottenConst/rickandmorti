@@ -5,13 +5,16 @@ import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.essenty.lifecycle.doOnDestroy
 import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers.Main
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import org.example.rickandmorti.FavoritesStore
 import org.example.rickandmorti.domain.model.Character
 import org.example.rickandmorti.domain.model.Episode
+import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.presentation.CharacterViewModel
 import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
@@ -24,6 +27,7 @@ class DefaultDetailCharacterComponent(
     componentContext: ComponentContext,
     character: Character,
     private val episodeClicked: (Episode) -> Unit,
+    private val onLocationToScreenClicked: (Location) -> Unit,
     private val onFinished: () -> Unit,
     private val favoritesStore: FavoritesStore
 ): DetailCharacterComponent, ComponentContext by componentContext, KoinComponent {
@@ -39,6 +43,7 @@ class DefaultDetailCharacterComponent(
     override val favorites: Value<Set<Int>> = _favorites
 
     private val scope = CoroutineScope(SupervisorJob())
+    private val clickScope = CoroutineScope(SupervisorJob() + Main)
 
     private val viewModel: CharacterViewModel = get<CharacterViewModel> {
         parametersOf()
@@ -74,6 +79,21 @@ class DefaultDetailCharacterComponent(
 
         lifecycle.doOnDestroy {
             scope.cancel()
+            clickScope.cancel()
+        }
+    }
+
+    override fun onLocationClicked(locationUrl: String) {
+        clickScope.launch {
+            viewModel.getLocation(locationUrl, false)
+            viewModel.location
+                .collect { location ->
+                    if (location != null) {
+                        onLocationToScreenClicked(location)
+                    } else {
+                        Logger.log("location not fount")
+                    }
+                }
         }
     }
 
