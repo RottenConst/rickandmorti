@@ -1,16 +1,11 @@
 package org.example.rickandmorti
 
-import com.russhwolf.settings.ExperimentalSettingsApi
-import com.russhwolf.settings.ObservableSettings
-import com.russhwolf.settings.coroutines.getStringFlow
+import com.russhwolf.settings.Settings
 import com.russhwolf.settings.set
-import kotlinx.coroutines.DelicateCoroutinesApi
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.flow.Flow
-import kotlinx.coroutines.flow.SharingStarted
-import kotlinx.coroutines.flow.mapLatest
-import kotlinx.coroutines.flow.shareIn
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.serialization.builtins.ListSerializer
 import kotlinx.serialization.builtins.serializer
 import kotlinx.serialization.json.Json
@@ -35,7 +30,7 @@ interface FavoritesStore {
 }
 
 class SettingsFavoritesStore(
-    private val settings: ObservableSettings,
+    private val settings: Settings,
     private val json: Json = Json { ignoreUnknownKeys = true }
 ): FavoritesStore {
 
@@ -45,98 +40,77 @@ class SettingsFavoritesStore(
         const val FAVORITES_LOCATIONS_KEY = "favorite_locations_list"
     }
 
-    @OptIn(ExperimentalSettingsApi::class, ExperimentalCoroutinesApi::class,
-        DelicateCoroutinesApi::class
-    )
-    override val favoritesCharactersFlow: Flow<Set<Int>> = settings.getStringFlow(FAVORITES_CHARACTER_KEY, defaultValue = "")
-        .mapLatest { str ->
-            if (str.isEmpty()) emptySet()
-            else runCatching {
-                json.decodeFromString(ListSerializer(Int.serializer()), str)
-            }.getOrNull()?.toSet() ?: emptySet()
+    private val _favoritesCharactersFlow = MutableStateFlow<Set<Int>>(emptySet())
+    override val favoritesCharactersFlow: StateFlow<Set<Int>> = _favoritesCharactersFlow.asStateFlow()
 
-        }.shareIn(
-            scope = GlobalScope,
-            replay = 1,
-            started = SharingStarted.WhileSubscribed(5_000)
-        )
+    private val _favoritesEpisodesFlow = MutableStateFlow<Set<Int>>(emptySet())
+    override val favoritesEpisodesFlow: StateFlow<Set<Int>> = _favoritesEpisodesFlow.asStateFlow()
 
-    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class,
-        ExperimentalSettingsApi::class
-    )
-    override val favoritesEpisodesFlow: Flow<Set<Int>> = settings.getStringFlow(FAVORITES_EPISODES_KEY, defaultValue = "")
-        .mapLatest { str ->
-            if (str.isEmpty()) emptySet()
-            else runCatching {
-                json.decodeFromString(ListSerializer(Int.serializer()), str)
-            }.getOrNull()?.toSet() ?: emptySet()
-        }.shareIn(
-            scope = GlobalScope,
-            replay = 1,
-            started = SharingStarted.WhileSubscribed(5_000)
-        )
+    private val _favoritesLocationsFlow = MutableStateFlow<Set<Int>>(emptySet())
+    override val favoritesLocationsFlow: StateFlow<Set<Int>> = _favoritesLocationsFlow.asStateFlow()
 
-    @OptIn(DelicateCoroutinesApi::class, ExperimentalCoroutinesApi::class,
-        ExperimentalSettingsApi::class
-    )
-    override val favoritesLocationsFlow: Flow<Set<Int>> = settings.getStringFlow(FAVORITES_LOCATIONS_KEY, defaultValue = "")
-        .mapLatest { str ->
-            if (str.isEmpty()) emptySet()
-            else runCatching {
-                json.decodeFromString(ListSerializer(Int.serializer()), str)
-            }.getOrNull()?.toSet() ?: emptySet()
-        }.shareIn(GlobalScope, SharingStarted.WhileSubscribed(5_000), 1)
+    init {
+        _favoritesCharactersFlow.value = parseFavorites(FAVORITES_CHARACTER_KEY)
+        _favoritesEpisodesFlow.value = parseFavorites(FAVORITES_EPISODES_KEY)
+        _favoritesLocationsFlow.value = parseFavorites(FAVORITES_LOCATIONS_KEY)
+    }
 
     // персонажи
 
     override fun addFavoriteCharacter(characterId: Int) {
-        val current = getFavorites(FAVORITES_CHARACTER_KEY)
-        val updated = (current + characterId).toList()
-        settings[FAVORITES_CHARACTER_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated)
+        val current = _favoritesCharactersFlow.value
+        val updated = current + characterId
+        _favoritesCharactersFlow.value = updated
+        settings[FAVORITES_CHARACTER_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
     override fun removeFavoriteCharacter(characterId: Int) {
-        val current = getFavorites(FAVORITES_CHARACTER_KEY)
-        val updated = (current - characterId).toList()
-        settings[FAVORITES_CHARACTER_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated)
+        val current = _favoritesCharactersFlow.value
+        val updated = current - characterId
+        _favoritesCharactersFlow.value = updated
+        settings[FAVORITES_CHARACTER_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
-    override fun isFavoriteCharacter(characterId: Int): Boolean = getFavorites(FAVORITES_CHARACTER_KEY).contains(characterId)
+    override fun isFavoriteCharacter(characterId: Int): Boolean = _favoritesCharactersFlow.value.contains(characterId)
 
     // эпизоды
 
     override fun addFavoriteEpisode(episodeId: Int) {
-        val current = getFavorites(FAVORITES_EPISODES_KEY)
-        val updated = (current + episodeId).toList()
-        settings[FAVORITES_EPISODES_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated)
+        val current = _favoritesEpisodesFlow.value
+        val updated = current + episodeId
+        _favoritesEpisodesFlow.value = updated
+        settings[FAVORITES_EPISODES_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
     override fun removeFavoriteEpisode(episodeId: Int) {
-        val current = getFavorites(FAVORITES_EPISODES_KEY)
-        val updated = (current - episodeId).toList()
-        settings[FAVORITES_EPISODES_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated)
+        val current = _favoritesEpisodesFlow.value
+        val updated = current - episodeId
+        _favoritesEpisodesFlow.value = updated
+        settings[FAVORITES_EPISODES_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
-    override fun isFavoriteEpisode(episodeID: Int): Boolean = getFavorites(FAVORITES_EPISODES_KEY).contains(episodeID)
+    override fun isFavoriteEpisode(episodeID: Int): Boolean = _favoritesEpisodesFlow.value.contains(episodeID)
 
     // локации
 
     override fun addFavoriteLocation(locationID: Int) {
-        val current = getFavorites(FAVORITES_LOCATIONS_KEY)
-        val updated = (current + locationID).toList()
-        settings[FAVORITES_LOCATIONS_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated)
+        val current = _favoritesLocationsFlow.value
+        val updated = current + locationID
+        _favoritesLocationsFlow.value = updated
+        settings[FAVORITES_LOCATIONS_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
     override fun removeFavoriteLocation(locationID: Int) {
-        val current = getFavorites(FAVORITES_LOCATIONS_KEY)
-        val updated = (current - locationID).toList()
-        settings[FAVORITES_LOCATIONS_KEY] = json.encodeToString(ListSerializer(Int.serializer()),updated)
+        val current = _favoritesLocationsFlow.value
+        val updated = current - locationID
+        _favoritesLocationsFlow.value = updated
+        settings[FAVORITES_LOCATIONS_KEY] = json.encodeToString(ListSerializer(Int.serializer()), updated.toList())
     }
 
-    override fun isFavoriteLocation(locationID: Int): Boolean = getFavorites(FAVORITES_LOCATIONS_KEY).contains(locationID)
+    override fun isFavoriteLocation(locationID: Int): Boolean = _favoritesLocationsFlow.value.contains(locationID)
 
-    private fun getFavorites(key: String): Set<Int> {
-        val str: String? = settings.getStringOrNull(key)
+    private fun parseFavorites(key: String): Set<Int> {
+        val str = settings.getStringOrNull(key)
         return if (str.isNullOrEmpty()) {
             emptySet()
         } else {

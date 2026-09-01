@@ -1,18 +1,12 @@
 package org.example.rickandmorti
 
 import com.russhwolf.settings.NSUserDefaultsSettings
-import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.Settings
 import platform.Foundation.NSURL
 import platform.UIKit.UIApplication
-import platform.UIKit.UIDevice
 import kotlin.collections.emptyMap
 
-class IOSPlatform : Platform {
-    override val name: String = UIDevice.currentDevice.systemName() + " " + UIDevice.currentDevice.systemVersion
-}
-
-actual fun getPlatform(): Platform = IOSPlatform()
-actual fun createSettings(): ObservableSettings =
+actual fun createSettings(): Settings =
     NSUserDefaultsSettings.Factory().create()
 
 actual fun openInBrowser(url: String) {

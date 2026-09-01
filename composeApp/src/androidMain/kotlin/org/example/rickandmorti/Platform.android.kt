@@ -4,17 +4,11 @@ import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import android.content.Intent
-import android.os.Build
-import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.Settings
 import com.russhwolf.settings.SharedPreferencesSettings
 import androidx.core.net.toUri
 
-class AndroidPlatform : Platform {
-    override val name: String = "Android ${Build.VERSION.SDK_INT}"
-}
-
-actual fun getPlatform(): Platform = AndroidPlatform()
-actual fun createSettings(): ObservableSettings {
+actual fun createSettings(): Settings {
     val context: Context = Platform2.context
     return SharedPreferencesSettings(context.getSharedPreferences("app_settings", Context.MODE_PRIVATE))
 }

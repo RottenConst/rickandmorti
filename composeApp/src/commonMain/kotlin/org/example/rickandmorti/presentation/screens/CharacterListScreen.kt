@@ -2,18 +2,21 @@ package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.lazy.grid.GridCells
+import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
+import androidx.compose.foundation.lazy.grid.items
+import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -32,6 +35,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -62,7 +66,7 @@ fun ListScreen(
     val isFavoritesOnly by component.isFavoritesOnly.subscribeAsState()
     val favorites by component.favorites.collectAsState(initial = emptySet())
 
-    val listState = rememberLazyListState()
+    val listState = rememberLazyGridState()
     var loadingMore by remember { mutableStateOf(false) }
 
     LaunchedEffect(query) {
@@ -156,9 +160,11 @@ fun ListScreen(
             }
         }
 
-
-        LazyColumn(
-            state = listState
+        LazyVerticalGrid(
+            state = listState,
+            columns = GridCells.Adaptive(minSize = 200.dp),
+//            horizontalArrangement = Arrangement.spacedBy(8.dp),
+//            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             // Сообщение, если список пуст
             if (state.isEmpty() && !loadingMore) {
@@ -185,15 +191,27 @@ fun ListScreen(
             }
 
             // Индикатор загрузки
-            if (loadingMore && hasMorePages) {
-                item {
-                    CircularProgressIndicator(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(16.dp)
-                            .wrapContentSize()
-                    )
-                }
+//            if (loadingMore && hasMorePages) {
+//                item{
+//                    Box(
+//                        modifier = Modifier.fillMaxWidth(),
+//                        contentAlignment = Alignment.Center
+//                    ) {
+//                        CircularProgressIndicator(
+//                            modifier = Modifier.size(48.dp).fillMaxWidth()
+//                        )
+//                    }
+//                }
+//            }
+        }
+        if (loadingMore && hasMorePages) {
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(48.dp).fillMaxWidth()
+                )
             }
         }
     }

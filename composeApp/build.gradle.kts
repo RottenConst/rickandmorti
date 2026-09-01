@@ -1,7 +1,6 @@
-import org.gradle.kotlin.dsl.implementation
+import com.android.build.api.dsl.ApplicationExtension
 import org.jetbrains.compose.desktop.application.dsl.TargetFormat
 import org.jetbrains.kotlin.gradle.ExperimentalWasmDsl
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.targets.js.webpack.KotlinWebpackConfig
 
 plugins {
@@ -17,7 +16,7 @@ kotlin {
     androidTarget {
 
     }
-    jvmToolchain(11)
+    jvmToolchain(17)
 
     listOf(
         iosArm64(),
@@ -41,13 +40,13 @@ kotlin {
         // Replace deprecated 'moduleName' with 'outputModuleName'
         outputModuleName.set("composeApp")
 
+        val wasmDir = project.projectDir
+
         browser {
             commonWebpackConfig {
                 outputFileName = "composeApp.js"
                 devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-                    static = (static ?: mutableListOf()).apply {
-                        add(project.projectDir.path)
-                    }
+                    static(wasmDir.path)
                 }
             }
         }
@@ -86,8 +85,8 @@ kotlin {
             implementation(libs.decompose)
             implementation(libs.decompose.extensions.compose)
             implementation(libs.kotlinx.serialization.json)
-            implementation("com.russhwolf:multiplatform-settings:1.3.0")
-            implementation("com.russhwolf:multiplatform-settings-coroutines:1.3.0")
+            implementation(libs.russhwolf.multiplatform.settings)
+            implementation(libs.russhwolf.multiplatform.settings.coroutines)
 
         }
         commonTest.dependencies {
@@ -100,10 +99,12 @@ kotlin {
             implementation(libs.ktor.client.java)
             implementation(libs.slf4j.simple)
             implementation(libs.coil.network.okhttp)
-            implementation("com.russhwolf:multiplatform-settings-jvm:1.3.0")
+            implementation(libs.russhwolf.multiplatform.settings.jvm)
         }
         wasmJsMain.dependencies {
             implementation(libs.ktor.client.js)
+            implementation(libs.russhwolf.multiplatform.settings)
+            implementation(libs.russhwolf.multiplatform.settings.coroutines)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -111,7 +112,8 @@ kotlin {
     }
 }
 
-android {
+
+extensions.configure<ApplicationExtension> {
     namespace = "org.example.rickandmorti"
     compileSdk = libs.versions.android.compileSdk.get().toInt()
 

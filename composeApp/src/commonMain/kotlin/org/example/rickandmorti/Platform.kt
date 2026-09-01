@@ -1,13 +1,11 @@
 package org.example.rickandmorti
 
-import com.russhwolf.settings.ObservableSettings
+import com.russhwolf.settings.Settings
 
 interface Platform {
     val name: String
 }
 
-expect fun getPlatform(): Platform
-
 expect fun openInBrowser(url :String)
 
-expect fun createSettings(): ObservableSettings
+expect fun createSettings(): Settings

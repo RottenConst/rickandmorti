@@ -1,7 +1,15 @@
 package org.example.rickandmorti
 
-class WasmPlatform : Platform {
-    override val name: String = "Web with Kotlin/Wasm"
+import com.russhwolf.settings.ExperimentalSettingsApi
+import com.russhwolf.settings.Settings
+import com.russhwolf.settings.StorageSettings
+import kotlinx.browser.window
+
+actual fun openInBrowser(url: String) {
+    window.open(url, "_blank")?.focus()
 }
 
-actual fun getPlatform(): Platform = WasmPlatform()
+@OptIn(ExperimentalSettingsApi::class)
+actual fun createSettings(): Settings {
+    return StorageSettings()
+}
