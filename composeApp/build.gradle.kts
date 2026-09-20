@@ -70,6 +70,7 @@ kotlin {
             implementation(libs.simple.icons)
             implementation(libs.tabler.icons)
             implementation(libs.kotlinx.coroutines.core)
+            implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.viewmodelCompose)
             implementation(libs.androidx.lifecycle.runtimeCompose)
             implementation(libs.kotlinx.datetime)

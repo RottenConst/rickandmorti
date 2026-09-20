@@ -1,7 +1,10 @@
 package org.example.rickandmorti.presentation
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -22,7 +25,7 @@ class CharacterViewModel(
     private val getCharactersUseCase: GetCharactersUseCase,
     private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase,
     private val getLocationByUrlUseCase: GetLocationByUrlUseCase
-) : BaseViewModel(), KoinComponent {
+) : ViewModel(), KoinComponent {
     private val _stateCharacter = MutableStateFlow<UiStateCharacter>(UiStateCharacter.Loading)
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter.asStateFlow()
 
@@ -169,5 +172,10 @@ class CharacterViewModel(
             _stateEpisode.value = UiStateEpisode.Success(episodes)
             isLoadingEpisode = false
         }
+    }
+
+    override fun onCleared() {
+        super.onCleared()
+        viewModelScope.cancel()
     }
 }

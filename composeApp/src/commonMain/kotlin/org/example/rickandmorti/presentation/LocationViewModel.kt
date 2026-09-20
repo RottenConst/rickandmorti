@@ -1,5 +1,7 @@
 package org.example.rickandmorti.presentation
 
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,7 +20,7 @@ import kotlin.time.Duration.Companion.milliseconds
 class LocationViewModel(
     private val getLocationsUseCase: GetLocationsUseCase,
     private val getCharacterByUrlUseCase: GetCharacterByUrlUseCase
-): BaseViewModel(), KoinComponent {
+): ViewModel(), KoinComponent {
     private val _stateLocations = MutableStateFlow<UiStateLocation>(UiStateLocation.Loading)
     val stateLocation: StateFlow<UiStateLocation> = _stateLocations
 
