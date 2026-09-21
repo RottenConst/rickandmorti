@@ -4,7 +4,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.cancel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -18,14 +17,13 @@ import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.presentation.uistate.UiStateEpisode
 import org.example.rickandmorti.util.Logger
 import org.example.rickandmorti.util.NetworkResult
-import org.koin.core.component.KoinComponent
 import kotlin.time.Duration.Companion.milliseconds
 
 class CharacterViewModel(
     private val getCharactersUseCase: GetCharactersUseCase,
     private val getEpisodeByUrlUseCase: GetEpisodeByUrlUseCase,
     private val getLocationByUrlUseCase: GetLocationByUrlUseCase
-) : ViewModel(), KoinComponent {
+) : ViewModel() {
     private val _stateCharacter = MutableStateFlow<UiStateCharacter>(UiStateCharacter.Loading)
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter.asStateFlow()
 
@@ -39,9 +37,7 @@ class CharacterViewModel(
 
     private var currentPage = 1
     private var isLoading = false
-
     private var isLoadingEpisode = false
-    var hasMorePages = true
 
     init {
         loadedAllCharacters()
@@ -63,18 +59,31 @@ class CharacterViewModel(
                     val currentIds = currentList.map { it.id }.toSet()
                     val newChars = result.data.filterNot { it.id in currentIds }
 
-                    if (newChars.isNotEmpty()) {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars)
+                    val hasMore = newChars.isNotEmpty()
+                    if (hasMore) {
+                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars, hasMorePages = true)
                         currentPage++
-                        hasMorePages = true
                         Logger.log(message = "VM: loaded ${newChars.size} chars, total: ${currentList.size + newChars.size}")
                     } else {
-                        hasMorePages = false
+                        _stateCharacter.value = UiStateCharacter.Success(currentList, hasMorePages = false)
                     }
                 }
                 is NetworkResult.Error -> {
-                    _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Unknown error")
-                    hasMorePages = false
+                    val currentState = _stateCharacter.value as? UiStateCharacter.Success
+                    val currentHasMore = currentState?.hasMorePages ?: false
+
+                    if (currentState != null) {
+                        _stateCharacter.value = UiStateCharacter.Error(
+                            result.exception.message ?: "Unknown error",
+                            hasMorePages = currentHasMore
+                        )
+                    } else {
+                        _stateCharacter.value = UiStateCharacter.Error(
+                            message = result.exception.message ?: "Unknown error",
+                            hasMorePages = false
+                        )
+                    }
+
                     Logger.log("VM Error: ${result.exception}")
                 }
             }
@@ -83,26 +92,33 @@ class CharacterViewModel(
     }
 
     fun loadNextPage(name: String? = null) {
-        if (!hasMorePages || isLoading) return
+        val currentHasMore = (_stateCharacter.value as? UiStateCharacter.Success)?.hasMorePages ?: false
+        if (!currentHasMore || isLoading) return
 
         val query = name?.takeIf(String::isNotBlank)
         viewModelScope.launch {
+            delay(300.milliseconds)
             when (val result = getCharactersUseCase(name = query, page = currentPage)) {
                 is NetworkResult.Success -> {
                     val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
                     val currentIds = currentList.map { it.id }.toSet()
                     val newChars = result.data.filterNot { it.id in currentIds }
 
-                    if (newChars.isNotEmpty()) {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars)
+                    val hasMore = newChars.isNotEmpty()
+                    if (hasMore) {
+                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars, hasMorePages = true)
                         currentPage++
                     } else {
-                        hasMorePages = false
+                        _stateCharacter.value = UiStateCharacter.Success(currentList, hasMorePages = false)
                     }
                 }
                 is NetworkResult.Error -> {
-                    _stateCharacter.value = UiStateCharacter.Error(result.exception.message ?: "Error")
-                    hasMorePages = false
+                    val currentState = _stateCharacter.value as? UiStateCharacter.Success
+                    _stateCharacter.value = UiStateCharacter.Error(
+                        message = result.exception.message ?: "Error",
+                        hasMorePages = currentState?.hasMorePages ?: false
+                    )
+                    Logger.log("VM Error loadNextPage: ${result.exception}")
                 }
             }
         }
@@ -122,13 +138,13 @@ class CharacterViewModel(
     fun refreshWithSearch(name: String? = null) {
         val query = name.takeIf { it?.isNotBlank() == true }
         currentPage = 1
-        hasMorePages = true
         _stateCharacter.value = UiStateCharacter.Loading
         loadedAllCharacters(query)
     }
 
     fun loadCharactersByIds(ids: List<Int>) {
         viewModelScope.launch {
+            val currentState = _stateCharacter.value as? UiStateCharacter.Success
             val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
             val currentIds = currentList.map { it.id }.toSet()
             val idsToLoad = ids.filterNot { it in currentIds }
@@ -148,7 +164,7 @@ class CharacterViewModel(
             }.awaitAll().filterNotNull()
             
             if (loadedChars.isNotEmpty()) {
-                _stateCharacter.value = UiStateCharacter.Success(currentList + loadedChars)
+                _stateCharacter.value = UiStateCharacter.Success(currentList + loadedChars, currentState?.hasMorePages ?: false)
                 Logger.log("Loaded ${loadedChars.size} missing characters")
             }
         }
@@ -169,13 +185,8 @@ class CharacterViewModel(
                 }
             }.awaitAll().filterNotNull()
 
-            _stateEpisode.value = UiStateEpisode.Success(episodes)
+            _stateEpisode.value = UiStateEpisode.Success(episodes, false)
             isLoadingEpisode = false
         }
-    }
-
-    override fun onCleared() {
-        super.onCleared()
-        viewModelScope.cancel()
     }
 }
