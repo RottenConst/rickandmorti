@@ -79,6 +79,7 @@ interface CharacterListComponent {
     fun onCharacterClicked(character: Character)
     fun loadNextPage()
     fun toggleFavorite(character: Character)
+    fun toggleFavoritesOnly()
 }
 
 interface EpisodeListComponent {

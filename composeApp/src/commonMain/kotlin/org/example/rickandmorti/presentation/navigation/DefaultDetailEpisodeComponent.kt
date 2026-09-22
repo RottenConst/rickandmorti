@@ -17,8 +17,6 @@ import org.example.rickandmorti.presentation.EpisodesViewModel
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.util.Logger
 import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
-import org.koin.core.parameter.parametersOf
 import kotlin.collections.emptySet
 
 class DefaultDetailEpisodeComponent(
@@ -26,7 +24,8 @@ class DefaultDetailEpisodeComponent(
     episode: Episode,
     private val characterClicked: (Character) -> Unit,
     private val onFinished: () -> Unit,
-    private val favoritesStore: FavoritesStore
+    private val favoritesStore: FavoritesStore,
+    private val viewModel: EpisodesViewModel
 ): DetailEpisodeComponent, ComponentContext by componentContext, KoinComponent {
 
     override val episode: Value<Episode> = MutableValue(episode)
@@ -41,9 +40,6 @@ class DefaultDetailEpisodeComponent(
     override val isCharactersLoading: Value<Boolean> = _isCharactersLoaded
 
     private val scope = CoroutineScope(SupervisorJob())
-    private val viewModel: EpisodesViewModel = get<EpisodesViewModel> {
-        parametersOf()
-    }
 
     init {
         Logger.log("DefaultDetailEpisodeComponent episode.character = ${episode.characters}")

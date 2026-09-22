@@ -93,6 +93,7 @@ class DefaultRootComponent(
                 episodeClicked = { episode ->
                     navigation.push(Config.DetailEpisode(episode))
                 },
+                viewModel = characterViewModel,
                 onLocationToScreenClicked = { location ->
                     navigation.push(Config.DetailLocation(location))
                 }
@@ -117,6 +118,7 @@ class DefaultRootComponent(
                 episode = config.episode,
                 favoritesStore = favoritesStore,
                 onFinished = { navigation.pop() },
+                viewModel = episodesViewModel,
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))
                 }
@@ -139,6 +141,7 @@ class DefaultRootComponent(
                 location = config.location,
                 favoritesStore = favoritesStore,
                 onFinished = { navigation.pop() },
+                viewModel = locationViewModel,
                 characterClicked = { character ->
                     navigation.push(Config.Detail(character))
                 }

@@ -15,17 +15,15 @@ import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.presentation.LocationViewModel
 import org.example.rickandmorti.presentation.uistate.UiStateCharacter
 import org.example.rickandmorti.util.Logger
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.get
-import org.koin.core.parameter.parametersOf
 
 class DefaultDetailLocationComponent(
     componentContext: ComponentContext,
     location: Location,
     private val characterClicked: (Character) -> Unit,
     private val onFinished: () -> Unit,
-    private val favoritesStore: FavoritesStore
-): DetailLocationComponent, ComponentContext by componentContext, KoinComponent {
+    private val favoritesStore: FavoritesStore,
+    private val viewModel: LocationViewModel
+): DetailLocationComponent, ComponentContext by componentContext {
     override val location: Value<Location> = MutableValue(location)
 
 
@@ -39,10 +37,6 @@ class DefaultDetailLocationComponent(
     override val isCharactersLoading: Value<Boolean> = _isCharactersLoading
 
     private val scope = CoroutineScope(SupervisorJob())
-
-    private val viewModel: LocationViewModel = get<LocationViewModel> {
-        parametersOf()
-    }
 
     init {
         Logger.log("DefaultDetailLocationComponent location.residents ${location.residents}")
