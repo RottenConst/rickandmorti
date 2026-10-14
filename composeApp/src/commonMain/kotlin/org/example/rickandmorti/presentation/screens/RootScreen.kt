@@ -12,7 +12,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,6 +61,10 @@ fun RootScreen(
     val child by component.stack.subscribeAsState()
     val activeChild = child.active.instance
 
+    val isDetailScreen = activeChild is RootComponent.Child.DetailCharacter ||
+            activeChild is RootComponent.Child.DetailEpisode ||
+            activeChild is RootComponent.Child.DetailLocation
+
     val titleText: String by remember(activeChild, activeTab) {
         derivedStateOf {
             when (activeChild) {
@@ -77,11 +82,7 @@ fun RootScreen(
 
     Scaffold(
         topBar = {
-            if (
-                component.stack.value.active.instance is RootComponent.Child.DetailCharacter ||
-                component.stack.value.active.instance is RootComponent.Child.DetailEpisode ||
-                component.stack.value.active.instance is RootComponent.Child.DetailLocation
-            ) {
+            if (isDetailScreen) {
                 TopAppBar(
                     title = {
                         Text(
@@ -157,17 +158,13 @@ fun RootScreen(
                                 }
                             }
 
-                            else-> {}
                         }
                     }
                 )
             }
         },
         bottomBar = {
-            if (
-                component.stack.value.active.instance !is RootComponent.Child.DetailCharacter &&
-                component.stack.value.active.instance !is RootComponent.Child.DetailEpisode
-                ) {
+            if (!isDetailScreen) {
                 CustomBottomBar(
                     tabs = RootComponent.Tab.entries.toTypedArray(),
                     selectedTab = activeTab,
@@ -204,9 +201,9 @@ private fun CustomBottomBar(
     Row(
         modifier = modifier
             .fillMaxWidth()
-            .height(68.dp)
+//            .height(68.dp)
             .padding(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
+        horizontalArrangement = Arrangement.SpaceEvenly,
         verticalAlignment = Alignment.CenterVertically
     ) {
         tabs.forEach { tab ->
@@ -222,6 +219,7 @@ private fun CustomBottomBar(
             // Цвет иконки и текста
             val targetColor = if (tab == selectedTab) {
                 MaterialTheme.colorScheme.primary
+
             } else if (isHovered) {
                 MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
             } else {
@@ -239,10 +237,16 @@ private fun CustomBottomBar(
                 label = "bottom_bar_bg"
             )
 
+            val cornerRadius = if (tab == selectedTab) {
+                RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp, bottomStart = 24.dp, bottomEnd = 24.dp)
+            } else {
+                RoundedCornerShape(12.dp)
+            }
+
             Box(
                 modifier = Modifier
-                    .weight(1f)
-                    .clip(CircleShape)
+                    .width(96.dp)
+                    .clip(cornerRadius)
                     .then(
                         if (tab == selectedTab || isHovered) {
                             Modifier

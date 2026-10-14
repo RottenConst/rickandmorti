@@ -2,14 +2,12 @@ package org.example.rickandmorti.presentation.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
@@ -27,6 +25,7 @@ import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
@@ -35,7 +34,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.Alignment.Companion.CenterHorizontally
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
@@ -44,11 +42,12 @@ import compose.icons.TablerIcons
 import compose.icons.tablericons.Heart
 import compose.icons.tablericons.HeartBroken
 import compose.icons.tablericons.Search
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.presentation.navigation.CharacterListComponent
-import org.example.rickandmorti.presentation.navigation.DefaultCharacterListComponent
 import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.util.Logger
 import kotlin.time.Duration.Companion.milliseconds
@@ -56,15 +55,15 @@ import kotlin.time.Duration.Companion.milliseconds
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
-    component: CharacterListComponent,
-    modifier: Modifier = Modifier,
+    component: CharacterListComponent
 ) {
     var query by remember { mutableStateOf("") }
-    val debouncedQuery = remember { mutableStateOf("") }
+    val debouncedQuery = rememberDebouncedString(initial = "", delayMillis = 500L)
 
     val state by component.characters.subscribeAsState()
     val isFavoritesOnly by component.isFavoritesOnly.subscribeAsState()
     val favorites by component.favorites.collectAsState(initial = emptySet())
+    val hasMorePages by component.hasMorePages.subscribeAsState()
 
     val listState = rememberLazyGridState()
     var loadingMore by remember { mutableStateOf(false) }
@@ -72,14 +71,12 @@ fun ListScreen(
     LaunchedEffect(query) {
         launch {
             delay(500.milliseconds)
-            debouncedQuery.value = query
         }
     }
 
     LaunchedEffect(debouncedQuery.value, isFavoritesOnly) {
         component.loadSearch(debouncedQuery.value.takeIf { it.isNotBlank() })
     }
-    val hasMorePages by component.hasMorePages.subscribeAsState()
     // Создаем derived state для отслеживания условия прокрутки
     val shouldLoadMore = remember {
         derivedStateOf {
@@ -110,7 +107,8 @@ fun ListScreen(
 
 
     Column(
-        modifier = modifier.fillMaxSize()
+        modifier = Modifier
+            .fillMaxSize()
     ) {
         Row(
             modifier = Modifier.fillMaxWidth().padding(8.dp),
@@ -146,7 +144,7 @@ fun ListScreen(
                         shape = RoundedCornerShape(32.dp)
                     )
                     .clickable {
-                        (component as? DefaultCharacterListComponent)?.toggleFavoritesOnly()
+                        component.toggleFavoritesOnly()
                     }
                     .padding(8.dp),
                 contentAlignment = Alignment.Center
@@ -163,6 +161,7 @@ fun ListScreen(
         LazyVerticalGrid(
             state = listState,
             columns = GridCells.Adaptive(minSize = 200.dp),
+            modifier = Modifier.fillMaxSize()
 //            horizontalArrangement = Arrangement.spacedBy(8.dp),
 //            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -189,30 +188,42 @@ fun ListScreen(
                     onClick = { component.onCharacterClicked(character) }
                 )
             }
+            if (loadingMore && hasMorePages) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(48.dp)
+                        )
+                    }
+                }
 
-            // Индикатор загрузки
-//            if (loadingMore && hasMorePages) {
-//                item{
-//                    Box(
-//                        modifier = Modifier.fillMaxWidth(),
-//                        contentAlignment = Alignment.Center
-//                    ) {
-//                        CircularProgressIndicator(
-//                            modifier = Modifier.size(48.dp).fillMaxWidth()
-//                        )
-//                    }
-//                }
-//            }
-        }
-        if (loadingMore && hasMorePages) {
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(48.dp).fillMaxWidth()
-                )
             }
         }
     }
+}
+
+@Composable
+private fun rememberDebouncedString(
+    initial: String,
+    delayMillis: Long
+): MutableState<String> {
+    val debouncedValue = remember { mutableStateOf(initial) }
+    var job: Job = remember { Job() }
+
+    LaunchedEffect(initial) {
+        job.cancel()
+        job = coroutineScope {
+            launch {
+                delay(delayMillis.milliseconds)
+                debouncedValue.value = initial
+            }
+        }
+    }
+
+    return debouncedValue
 }
