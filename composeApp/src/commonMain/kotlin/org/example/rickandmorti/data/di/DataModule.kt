@@ -6,6 +6,9 @@ import io.ktor.client.plugins.defaultRequest
 import io.ktor.serialization.kotlinx.json.json
 import kotlinx.serialization.json.Json
 import org.example.rickandmorti.data.api.RickAndMortyApi
+import org.example.rickandmorti.data.dao.CharacterDao
+import org.example.rickandmorti.data.database.AppDatabase
+import org.example.rickandmorti.data.database.createDatabase
 import org.example.rickandmorti.data.source.CharacterDataSource
 import org.example.rickandmorti.data.source.EpisodeDataSource
 import org.example.rickandmorti.data.source.LocationDataSource
@@ -34,6 +37,10 @@ val dataModule = module {
         }
     }
 
+    single<AppDatabase> { createDatabase() }
+    single<CharacterDao> {
+        get<AppDatabase>().characterDao()
+    }
     single { RickAndMortyApi(get()) }
 
     singleOf(::CharacterDataSource)
