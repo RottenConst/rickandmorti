@@ -8,6 +8,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.model.Location
 import org.example.rickandmorti.domain.usecase.GetCharactersUseCase
@@ -40,7 +41,29 @@ class CharacterViewModel(
     private var isLoadingEpisode = false
 
     init {
+        observeCache()
         loadedAllCharacters()
+    }
+
+    private fun observeCache() {
+        viewModelScope.launch {
+            getCharactersUseCase.fromCache()
+                .catch { e ->
+                    Logger.log("Cache observe error: ${e.message}")
+                    emit(emptyList())
+                }
+                .collect { cachedCharacters ->
+                    if (_stateCharacter.value is UiStateCharacter.Loading) {
+                        if (cachedCharacters.isNotEmpty()) {
+                            _stateCharacter.value = UiStateCharacter.Success(
+                                cachedCharacters,
+                                hasMorePages = true
+                            )
+                            Logger.log("Loaded ${cachedCharacters.size} from cache as fallback")
+                        }
+                    }
+                }
+        }
     }
 
     fun loadedAllCharacters(name: String? = null){
