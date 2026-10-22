@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
     alias(libs.plugins.kotlinserialization)
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.room3)
 }
 
 kotlin {
@@ -25,6 +27,7 @@ kotlin {
         iosTarget.binaries.framework {
             baseName = "ComposeApp"
             isStatic = true
+            linkerOpts("-lsqlite3")
         }
     }
 
@@ -54,6 +57,18 @@ kotlin {
     }
 
     sourceSets {
+        val roomMain by creating {
+            dependsOn(commonMain.get())
+            dependencies {
+                implementation(libs.room3.runtime)
+                implementation(libs.sqlite.bundled)
+            }
+        }
+
+        androidMain.get().dependsOn(roomMain)
+        iosMain.get().dependsOn(roomMain)
+        jvmMain.get().dependsOn(roomMain)
+
         androidMain.dependencies {
             implementation(libs.compose.uiToolingPreview)
             implementation(libs.androidx.activity.compose)
@@ -88,6 +103,7 @@ kotlin {
             implementation(libs.kotlinx.serialization.json)
             implementation(libs.russhwolf.multiplatform.settings)
             implementation(libs.russhwolf.multiplatform.settings.coroutines)
+            implementation(libs.room3.runtime)
 
         }
         commonTest.dependencies {
@@ -106,6 +122,13 @@ kotlin {
             implementation(libs.ktor.client.js)
             implementation(libs.russhwolf.multiplatform.settings)
             implementation(libs.russhwolf.multiplatform.settings.coroutines)
+            implementation(libs.room3.runtime)
+            implementation(libs.sqlite.web)
+        }
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
+            implementation(libs.room3.runtime)
+            implementation(libs.sqlite.web)
         }
         iosMain.dependencies {
             implementation(libs.ktor.client.darwin)
@@ -143,6 +166,16 @@ extensions.configure<ApplicationExtension> {
 
 dependencies {
     debugImplementation(libs.compose.uiTooling)
+    add("kspAndroid", libs.room3.compiler)
+    add("kspIosSimulatorArm64", libs.room3.compiler)
+    add("kspIosArm64", libs.room3.compiler)
+    add("kspWasmJs", libs.room3.compiler)
+    add("kspJvm", libs.room3.compiler)
+    add("kspJs", libs.room3.compiler)
+}
+
+room3 {
+    schemaDirectory("$projectDir/schemas")
 }
 
 compose.desktop {

@@ -4,29 +4,32 @@ android-compileSdk = "37"
 android-minSdk = "24"
 android-targetSdk = "36"
 androidx-activity = "1.13.0"
-androidx-appcompat = "1.7.1"
-androidx-core = "1.18.0"
+androidx-appcompat = "1.8.0"
+androidx-core = "1.19.1"
 androidx-espresso = "3.7.0"
 androidx-lifecycle = "2.11.0"
 androidx-testExt = "1.3.0"
-coil3 = "3.5.0"
-composeHotReload = "1.0.0"
-composeMultiplatform = "1.10.3"
+ksp = "2.3.11"
+coil3 = "3.6.3"
+room3 = "3.1.0-alpha01"
+sqlite = "2.7.1"
+composeHotReload = "1.2.0"
+composeMultiplatform = "1.12.2"
 decompose = "3.5.0"
-kotlinxSerializationJson = "1.10.0"
+kotlinxSerializationJson = "1.11.0"
 multiplatformSettings = "1.3.0"
 multiplatformSettingsCoroutines = "1.3.0"
 multiplatformSettingsJvm = "1.3.0"
-serialization = "2.3.10"
+serialization = "2.4.21"
 junit = "4.13.2"
-koin = "4.1.1"
-kotlin = "2.3.21"
-ktor = "3.4.1"
-kotlinx-coroutines = "1.10.2"
-kotlinxDatetime = "0.7.1"
+koin = "4.2.2"
+kotlin = "2.4.21"
+ktor = "3.6.0"
+kotlinx-coroutines = "1.11.0"
+kotlinxDatetime = "0.8.0"
 material3 = "1.10.0-alpha05"
 simpleIcons = "1.1.1"
-slf4jSimple = "2.0.17"
+slf4jSimple = "2.0.20"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -83,6 +86,12 @@ coil-network-okhttp = { module = "io.coil-kt.coil3:coil-network-okhttp", version
 coil-network-ktor = { module = "io.coil-kt.coil3:coil-network-ktor3", version.ref = "coil3" }
 coil-mp = { module = "io.coil-kt.coil3:coil", version.ref = "coil3" }
 
+#Room
+sqlite-bundled = { module = "androidx.sqlite:sqlite-bundled", version.ref = "sqlite" }
+room3-runtime = { module = "androidx.room3:room3-runtime", version.ref = "room3" }
+room3-compiler = { module = "androidx.room3:room3-compiler", version.ref = "room3" }
+sqlite-web = { module = "androidx.sqlite:sqlite-web", version.ref = "sqlite"}
+
 #settings(DataStore)
 russhwolf-multiplatform-settings = { module = "com.russhwolf:multiplatform-settings", version.ref = "multiplatformSettings" }
 russhwolf-multiplatform-settings-coroutines = { module = "com.russhwolf:multiplatform-settings-coroutines", version.ref = "multiplatformSettingsCoroutines" }
@@ -104,3 +113,5 @@ composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "composeMul
 composeCompiler = { id = "org.jetbrains.kotlin.plugin.compose", version.ref = "kotlin" }
 kotlinMultiplatform = { id = "org.jetbrains.kotlin.multiplatform", version.ref = "kotlin" }
 kotlinserialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "serialization" }
+ksp = { id = "com.google.devtools.ksp", version.ref = "ksp"}
+room3 = { id = "androidx.room3", version.ref = "room3" }
