@@ -1,5 +1,7 @@
 package org.example.rickandmorti.domain.di
 
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.SupervisorJob
 import org.example.rickandmorti.data.repository.CharacterRepositoryImpl
 import org.example.rickandmorti.data.repository.EpisodeRepositoryImpl
 import org.example.rickandmorti.data.repository.LocationRepositoryImpl
@@ -17,6 +19,9 @@ import org.koin.core.module.dsl.singleOf
 import org.koin.dsl.module
 
 val domainModule = module {
+
+    single { CoroutineScope(SupervisorJob()) }
+
     singleOf(::CharacterRepositoryImpl) {
         bind<CharacterRepository>()
     }

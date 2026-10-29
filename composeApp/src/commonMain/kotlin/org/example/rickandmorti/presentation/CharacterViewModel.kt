@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -36,9 +37,9 @@ class CharacterViewModel(
 
     private val _origin = MutableStateFlow<Location?>(null)
 
-    private var currentPage = 1
-    private var isLoading = false
-    private var isLoadingEpisode = false
+    private val _currentPage = MutableStateFlow(1)
+    private val _isLoading = MutableStateFlow(false)
+    private val _isLoadingEpisode = MutableStateFlow(false)
 
     init {
         observeCache()
@@ -69,81 +70,63 @@ class CharacterViewModel(
     fun loadedAllCharacters(name: String? = null){
         val query = name?.takeIf(String::isNotBlank)
         Logger.log("VM Searched for $query")
-
-        if (isLoading) return
-        isLoading = true
-
         viewModelScope.launch {
+            loadCharactersPage(query)
+        }
+    }
+
+    fun loadNextPage(name: String? = null) {
+        val currentHasMore = (_stateCharacter.value as? UiStateCharacter.Success)?.hasMorePages ?: false
+        if (!currentHasMore || _isLoading.value) return
+
+        val query = name?.takeIf(String::isNotBlank)
+        viewModelScope.launch {
+            loadCharactersPage(query, isLoadMore = true)
+        }
+    }
+
+    private suspend fun loadCharactersPage(query: String?, isLoadMore: Boolean = false) {
+        if (_isLoading.value) return
+        _isLoading.value = true
+
+        try {
             delay(300.milliseconds)
 
-            when (val result = getCharactersUseCase(name = query, page = currentPage)) {
+            val page = if (isLoadMore) _currentPage.value else 1
+            when (val result = getCharactersUseCase(name = query, page = page)) {
                 is NetworkResult.Success -> {
                     val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
                     val currentIds = currentList.map { it.id }.toSet()
                     val newChars = result.data.filterNot { it.id in currentIds }
 
-                    val hasMore = newChars.isNotEmpty()
-                    if (hasMore) {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars, hasMorePages = true)
-                        currentPage++
-                        Logger.log(message = "VM: loaded ${newChars.size} chars, total: ${currentList.size + newChars.size}")
+                    if (newChars.isNotEmpty()) {
+                        val newList = currentList + newChars
+                        _stateCharacter.value = UiStateCharacter.Success(
+                            newList,
+                            hasMorePages = true
+                        )
+                        _currentPage.value = page + 1
+                        Logger.log("VM: loaded ${newChars.size} chars, total: ${newList.size}, next page: ${_currentPage.value}")
                     } else {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList, hasMorePages = false)
+                        _stateCharacter.value = UiStateCharacter.Success(
+                            currentList,
+                            hasMorePages = false
+                        )
                     }
                 }
                 is NetworkResult.Error -> {
                     val currentState = _stateCharacter.value as? UiStateCharacter.Success
                     val currentHasMore = currentState?.hasMorePages ?: false
 
-                    if (currentState != null) {
-                        _stateCharacter.value = UiStateCharacter.Error(
-                            result.exception.message ?: "Unknown error",
-                            hasMorePages = currentHasMore
-                        )
-                    } else {
-                        _stateCharacter.value = UiStateCharacter.Error(
-                            message = result.exception.message ?: "Unknown error",
-                            hasMorePages = false
-                        )
-                    }
-
+                    _stateCharacter.value = UiStateCharacter.Error(
+                        message = result.exception.message ?: "Unknown error",
+                        hasMorePages = currentHasMore
+                    )
                     Logger.log("VM Error: ${result.exception}")
                 }
             }
-            isLoading = false
-        }
-    }
-
-    fun loadNextPage(name: String? = null) {
-        val currentHasMore = (_stateCharacter.value as? UiStateCharacter.Success)?.hasMorePages ?: false
-        if (!currentHasMore || isLoading) return
-
-        val query = name?.takeIf(String::isNotBlank)
-        viewModelScope.launch {
-            delay(300.milliseconds)
-            when (val result = getCharactersUseCase(name = query, page = currentPage)) {
-                is NetworkResult.Success -> {
-                    val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
-                    val currentIds = currentList.map { it.id }.toSet()
-                    val newChars = result.data.filterNot { it.id in currentIds }
-
-                    val hasMore = newChars.isNotEmpty()
-                    if (hasMore) {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList + newChars, hasMorePages = true)
-                        currentPage++
-                    } else {
-                        _stateCharacter.value = UiStateCharacter.Success(currentList, hasMorePages = false)
-                    }
-                }
-                is NetworkResult.Error -> {
-                    val currentState = _stateCharacter.value as? UiStateCharacter.Success
-                    _stateCharacter.value = UiStateCharacter.Error(
-                        message = result.exception.message ?: "Error",
-                        hasMorePages = currentState?.hasMorePages ?: false
-                    )
-                    Logger.log("VM Error loadNextPage: ${result.exception}")
-                }
-            }
+        } finally {
+            _isLoading.value = false
         }
     }
 
@@ -160,56 +143,79 @@ class CharacterViewModel(
 
     fun refreshWithSearch(name: String? = null) {
         val query = name.takeIf { it?.isNotBlank() == true }
-        currentPage = 1
+        _currentPage.value = 1
         _stateCharacter.value = UiStateCharacter.Loading
         loadedAllCharacters(query)
     }
 
     fun loadCharactersByIds(ids: List<Int>) {
         viewModelScope.launch {
-            val currentState = _stateCharacter.value as? UiStateCharacter.Success
             val currentList = (_stateCharacter.value as? UiStateCharacter.Success)?.characters.orEmpty()
             val currentIds = currentList.map { it.id }.toSet()
             val idsToLoad = ids.filterNot { it in currentIds }
             
             if (idsToLoad.isEmpty()) return@launch
             
-            val loadedChars = idsToLoad.map { id ->
-                async {
-                    when (val result = getCharactersUseCase(id = id)) {
-                        is NetworkResult.Success -> result.data
-                        is NetworkResult.Error -> {
-                            Logger.log("Error loading character $id: ${result.exception}")
-                            null
+            val loadedChars = try {
+                coroutineScope {
+                    idsToLoad.map { id ->
+                        async {
+                            when (val result = getCharactersUseCase(id = id)) {
+                                is NetworkResult.Success -> result.data
+                                is NetworkResult.Error -> {
+                                    Logger.log("Error loading character $id: ${result.exception}")
+                                    null
+                                }
+                            }
                         }
-                    }
+                    }.awaitAll().filterNotNull()
                 }
-            }.awaitAll().filterNotNull()
+            } catch (e: Exception) {
+                Logger.log("Error loading characters by IDs: ${e.message}")
+                emptyList()
+            }
             
             if (loadedChars.isNotEmpty()) {
-                _stateCharacter.value = UiStateCharacter.Success(currentList + loadedChars, currentState?.hasMorePages ?: false)
+                val currentState = _stateCharacter.value as? UiStateCharacter.Success
+                _stateCharacter.value = UiStateCharacter.Success(
+                    currentList + loadedChars,
+                    currentState?.hasMorePages ?: false
+                )
                 Logger.log("Loaded ${loadedChars.size} missing characters")
             }
         }
     }
 
     fun loadEpisodes(urls: List<String>) {
-        if (isLoadingEpisode) return
-        isLoadingEpisode = true
+        if (_isLoadingEpisode.value) return
+        _isLoadingEpisode.value = true
         _stateEpisode.value = UiStateEpisode.Loading
 
         viewModelScope.launch {
-            val episodes = urls.map { url ->
-                async {
-                    when (val result = getEpisodeByUrlUseCase(url)) {
-                        is NetworkResult.Success -> result.data
-                        is NetworkResult.Error -> null
+            try {
+                val episodes = try {
+                    coroutineScope {
+                        urls.map { url ->
+                            async {
+                                when (val result = getEpisodeByUrlUseCase(url)) {
+                                    is NetworkResult.Success -> result.data
+                                    is NetworkResult.Error -> {
+                                        Logger.log("Error loading episode $url: ${result.exception}")
+                                        null
+                                    }
+                                }
+                            }
+                        }.awaitAll().filterNotNull()
                     }
+                }catch (e: Exception) {
+                    Logger.log("Error loading episodes: ${e.message}")
+                    emptyList()
                 }
-            }.awaitAll().filterNotNull()
 
-            _stateEpisode.value = UiStateEpisode.Success(episodes, false)
-            isLoadingEpisode = false
+                _stateEpisode.value = UiStateEpisode.Success(episodes, false)
+            } finally {
+                _isLoadingEpisode.value = false
+            }
         }
     }
 }

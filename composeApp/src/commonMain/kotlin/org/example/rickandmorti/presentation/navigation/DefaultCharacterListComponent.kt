@@ -106,7 +106,7 @@ class DefaultCharacterListComponent(
 
     // Метод для подгрузки следующей страницы
     override fun loadNextPage() {
-        viewModel.loadedAllCharacters()
+        viewModel.loadNextPage()
     }
 
     override fun toggleFavorite(character: Character) {
