@@ -17,7 +17,6 @@ import androidx.compose.foundation.lazy.grid.items
 import androidx.compose.foundation.lazy.grid.rememberLazyGridState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.Text
@@ -43,22 +42,19 @@ import compose.icons.tablericons.Heart
 import compose.icons.tablericons.HeartBroken
 import compose.icons.tablericons.Search
 import kotlinx.coroutines.Job
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.launch
 import org.example.rickandmorti.presentation.navigation.CharacterListComponent
 import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.util.Logger
 import kotlin.time.Duration.Companion.milliseconds
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ListScreen(
     component: CharacterListComponent
 ) {
     var query by remember { mutableStateOf("") }
-    val debouncedQuery = rememberDebouncedString(initial = "", delayMillis = 500L)
+    val debouncedQuery = rememberDebouncedString(value = query)
 
     val state by component.characters.subscribeAsState()
     val isFavoritesOnly by component.isFavoritesOnly.subscribeAsState()
@@ -67,12 +63,6 @@ fun ListScreen(
 
     val listState = rememberLazyGridState()
     var loadingMore by remember { mutableStateOf(false) }
-
-    LaunchedEffect(query) {
-        launch {
-            delay(500.milliseconds)
-        }
-    }
 
     LaunchedEffect(debouncedQuery.value, isFavoritesOnly) {
         component.loadSearch(debouncedQuery.value.takeIf { it.isNotBlank() })
@@ -100,9 +90,9 @@ fun ListScreen(
     }
 
     LaunchedEffect(state) {
-        if (state.isNotEmpty()) {
+//        if (state.isNotEmpty()) {
             loadingMore = false
-        }
+//        }
     }
 
 
@@ -180,7 +170,7 @@ fun ListScreen(
             }
 
             // Элементы списка
-            items(state) { character ->
+            items(state, key = {it.id}) { character ->
                 ItemCharacter(
                     character = character,
                     isFavorite = favorites.contains(character.id),
@@ -209,20 +199,15 @@ fun ListScreen(
 
 @Composable
 private fun rememberDebouncedString(
-    initial: String,
-    delayMillis: Long
+    value: String,
 ): MutableState<String> {
-    val debouncedValue = remember { mutableStateOf(initial) }
-    var job: Job = remember { Job() }
+    val debouncedValue = remember { mutableStateOf(value) }
+    var job by remember { mutableStateOf<Job?>(null) }
 
-    LaunchedEffect(initial) {
-        job.cancel()
-        job = coroutineScope {
-            launch {
-                delay(delayMillis.milliseconds)
-                debouncedValue.value = initial
-            }
-        }
+    LaunchedEffect(value) {
+        job?.cancel()
+        delay(500.milliseconds)
+        debouncedValue.value = value
     }
 
     return debouncedValue
