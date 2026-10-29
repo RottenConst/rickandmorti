@@ -24,7 +24,7 @@ fun App(rootComponent: RootComponent) {
             ImageLoader.Builder(context)
                 .diskCachePolicy(CachePolicy.ENABLED)
                 .networkCachePolicy(CachePolicy.ENABLED)
-                .diskCache { newDiskCache() }
+//                .diskCache { newDiskCache() }
                 .crossfade(true)
                 .logger(DebugLogger())
                 .build()
