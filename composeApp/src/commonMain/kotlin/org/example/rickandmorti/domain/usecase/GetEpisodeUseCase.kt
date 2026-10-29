@@ -1,5 +1,6 @@
 package org.example.rickandmorti.domain.usecase
 
+import kotlinx.coroutines.flow.Flow
 import org.example.rickandmorti.domain.model.Episode
 import org.example.rickandmorti.domain.repository.EpisodeRepository
 import org.example.rickandmorti.util.NetworkResult
@@ -13,5 +14,9 @@ class GetEpisodeUseCase(
 
     suspend operator fun invoke(id: Int): NetworkResult<Episode> {
         return episodeRepository.getEpisode(id)
+    }
+
+    fun fromCache(name: String? = null): Flow<List<Episode>> {
+        return episodeRepository.getEpisodesFlow(name)
     }
 }

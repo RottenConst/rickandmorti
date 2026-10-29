@@ -111,7 +111,7 @@ class DefaultEpisodeListComponent(
     override fun onEpisodeClicked(episode: Episode) = episodeClicked(episode)
 
     override fun loadNextPage() {
-        viewModel.loadAllEpisodes()
+        viewModel.loadNextPage()
     }
 
     override fun toggleFavorite(episode: Episode) {

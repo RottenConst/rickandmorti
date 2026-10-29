@@ -133,7 +133,7 @@ class DefaultLocationListComponent(
     override fun onLocationClick(location: Location) = locationClicked(location)
 
     override fun loadNextPage() {
-        viewModel.loadedAllLocations()
+        viewModel.loadNextPage()
     }
 
     override fun loadSearchLocation(name: String?) {

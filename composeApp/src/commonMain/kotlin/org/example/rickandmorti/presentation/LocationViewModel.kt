@@ -4,9 +4,11 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.launch
 import org.example.rickandmorti.domain.usecase.GetCharacterByUrlUseCase
 import org.example.rickandmorti.domain.usecase.GetLocationsUseCase
@@ -26,119 +28,150 @@ class LocationViewModel(
     private val _stateCharacter = MutableStateFlow<UiStateCharacter>(UiStateCharacter.Loading)
     val stateCharacter: StateFlow<UiStateCharacter> = _stateCharacter
 
-    private var currentPage = 1
-    private var isLoading = false
-    private var isLoadingCharacters = false
+    private var _currentPage = MutableStateFlow(1)
+    private var _isLoading = MutableStateFlow(false)
+    private var _isLoadingCharacters = MutableStateFlow(false)
 
     init {
+        observeCache()
         loadedAllLocations()
+    }
+
+    private fun observeCache() {
+        viewModelScope.launch {
+            getLocationsUseCase.fromCache()
+                .catch { e ->
+                    Logger.log("Cache observe error: ${e.message}")
+                    emit(emptyList())
+                }
+                .collect { cachedLocations ->
+                    if (_stateLocations.value is UiStateLocation.Loading) {
+                        if (cachedLocations.isNotEmpty()) {
+                            _stateLocations.value = UiStateLocation.Success(
+                                cachedLocations,
+                                hasMorePages = false
+                            )
+                            Logger.log("Loaded ${cachedLocations.size} from cache as fallback")
+                        }
+                    }
+                }
+        }
     }
 
     fun loadedAllLocations(name: String? = null) {
         val query = name?.takeIf(String::isNotBlank)
         Logger.log("VM Searched for $query")
-        if (isLoading) return
-        isLoading = true
+        if (_isLoading.value) return
+        _isLoading.value = true
 
         viewModelScope.launch {
-            delay(300.milliseconds)
-            when(val result = getLocationsUseCase(name = query, page = currentPage)) {
-                is NetworkResult.Success -> {
-                    val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
-                    val currentIds = currentList.map { it.id }.toSet()
-                    val newLocation = result.data.filterNot { it.id in currentIds }
-
-                    val hasMore = newLocation.isNotEmpty()
-                    if (hasMore) {
-                        _stateLocations.value = UiStateLocation.Success(currentList + newLocation, hasMorePages = true)
-                        currentPage++
-                        Logger.log("VM Loaded ${newLocation.size} location, total ${currentList.size + newLocation.size}")
-                    } else {
-                        _stateLocations.value = UiStateLocation.Success(currentList, hasMorePages = false)
-                    }
-                }
-                is NetworkResult.Error -> {
-                    val currentHasMore = (_stateLocations.value as? UiStateLocation.Success)?.hasMorePages ?: false
-                    _stateLocations.value = UiStateLocation.Error(
-                        message = result.exception.message ?: "unknown error",
-                        hasMorePages = currentHasMore
-                    )
-                    Logger.log("VM Error: ${result.exception.message}")
-                }
-            }
-            isLoading = false
+            getLocationPage(query)
         }
     }
 
     fun loadNextPage(name: String? = null) {
         val currentHasMore = (_stateLocations.value as? UiStateLocation.Success)?.hasMorePages ?: false
-        if (!currentHasMore || isLoading) return
+        if (!currentHasMore || _isLoading.value) return
 
         val query = name?.takeIf(String::isNotBlank)
 
         viewModelScope.launch {
-            when(val result = getLocationsUseCase(name = query, page = currentPage)) {
-                is NetworkResult.Success -> {
-                    val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
-                    val currentIds = currentList.map { it.id }.toSet()
-                    val newLocation = result.data.filterNot { it.id in currentIds }
-
-                    val hasMore = newLocation.isNotEmpty()
-                    if (hasMore) {
-                        _stateLocations.value = UiStateLocation.Success(currentList + newLocation, hasMorePages = true)
-                        currentPage++
-                    } else _stateLocations.value = UiStateLocation.Success(currentList, hasMorePages = false)
-
-                }
-
-                is NetworkResult.Error -> {
-                    _stateLocations.value = UiStateLocation.Error(
-                        message = result.exception.message ?: "Unknown error",
-                        hasMorePages = false
-                    )
-                }
-            }
+            getLocationPage(query, isLoadMore = true)
         }
     }
 
     fun refreshWithSearch(name: String? = null) {
         val query = name.takeIf { it?.isNotBlank() == true }
-        currentPage = 1
+        _currentPage.value = 1
         _stateLocations.value = UiStateLocation.Loading
         loadedAllLocations(query)
     }
 
     fun loadedLocationsByIds(ids: List<Int>) {
         viewModelScope.launch {
-            val currentState = _stateLocations.value as? UiStateLocation.Success
-            val currentList = currentState?.locations.orEmpty()
+            val currentList = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
             val currentIds = currentList.map { it.id }.toSet()
             val idsToLoad = ids.filterNot { it in currentIds }
 
             if (idsToLoad.isEmpty()) return@launch
 
-            val loadedLocation = idsToLoad.map { id ->
-                async {
-                    when (val result = getLocationsUseCase(id)) {
-                        is NetworkResult.Success -> result.data
-                        is NetworkResult.Error -> {
-                            Logger.log("Error loading location $id: ${result.exception}")
-                            null
+            val loadedLocation = try {
+                coroutineScope {
+                    idsToLoad.map { id ->
+                        async {
+                            when (val result = getLocationsUseCase(id)) {
+                                is NetworkResult.Success -> result.data
+                                is NetworkResult.Error -> {
+                                    Logger.log("Error loading location $id: ${result.exception}")
+                                    null
+                                }
+                            }
                         }
-                    }
+                    }.awaitAll().filterNotNull()
                 }
-            }.awaitAll().filterNotNull()
+            } catch (e: Exception) {
+                Logger.log("Error loading locations by IDs: ${e.message}")
+                emptyList()
+            }
 
             if (loadedLocation.isNotEmpty()) {
-                _stateLocations.value = UiStateLocation.Success(currentList + loadedLocation, currentState?.hasMorePages ?: false)
+                val currentState = _stateLocations.value as? UiStateLocation.Success
+                _stateLocations.value = UiStateLocation.Success(
+                    currentList + loadedLocation,
+                    currentState?.hasMorePages ?: false
+                )
                 Logger.log("Loaded ${loadedLocation.size} missing locations")
             }
         }
     }
 
+    private suspend fun getLocationPage(query: String?, isLoadMore: Boolean = false) {
+        if (_isLoading.value) return
+        _isLoading.value = true
+
+        return try {
+            delay(300.milliseconds)
+            val page = if (isLoadMore) _currentPage.value else 1
+            when (val result = getLocationsUseCase(name = query, page = page)) {
+                is NetworkResult.Success -> {
+                    val currentLocations = (_stateLocations.value as? UiStateLocation.Success)?.locations.orEmpty()
+                    val currentIds = currentLocations.map { it.id }.toSet()
+                    val newLocations = result.data.filterNot { it.id in currentIds }
+
+                    if (newLocations.isNotEmpty()) {
+                        val newList = currentLocations + newLocations
+                        _stateLocations.value = UiStateLocation.Success(
+                            newList,
+                            hasMorePages = true
+                        )
+                        _currentPage.value = page + 1
+                        Logger.log("VM: loaded ${newLocations.size} locations, total: ${newList.size}, next page: ${_currentPage.value}")
+                    } else {
+                        _stateLocations.value = UiStateLocation.Success(
+                            currentLocations,
+                            hasMorePages = false
+                        )
+                    }
+                }
+                is NetworkResult.Error -> {
+                    val currentState = _stateLocations.value as? UiStateLocation.Success
+                    val currentHasMore = currentState?.hasMorePages ?: false
+
+                    _stateLocations.value = UiStateLocation.Error(
+                        message = result.exception.message ?: "Unknown error",
+                        hasMorePages = currentHasMore
+                    )
+                    Logger.log("VM Error: ${result.exception}")
+                }
+            }
+        } finally {
+            _isLoading.value = false
+        }
+    }
+
     fun loadResidents(urls: List<String>) {
-        if (isLoadingCharacters) return
-        isLoadingCharacters = true
+        if (_isLoadingCharacters.value) return
+        _isLoadingCharacters.value = true
         _stateCharacter.value = UiStateCharacter.Loading
 
         viewModelScope.launch {
@@ -152,7 +185,7 @@ class LocationViewModel(
             }.awaitAll().filterNotNull()
 
             _stateCharacter.value = UiStateCharacter.Success(character, false)
-            isLoadingCharacters = false
+            _isLoadingCharacters.value = false
         }
     }
 }

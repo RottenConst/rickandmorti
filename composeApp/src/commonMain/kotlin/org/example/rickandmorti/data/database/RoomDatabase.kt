@@ -15,6 +15,8 @@ import org.example.rickandmorti.data.entity.CharacterEntity
 @ConstructedBy(AppDatabaseConstructor::class)
 abstract class AppDatabase : RoomDatabase() {
     abstract fun characterDao(): CharacterDao
+    abstract fun episodeDao(): EpisodeDao
+    abstract fun locationDao(): LocationDao
 }
 
 @Suppress("KotlinNoActualForExpect")
