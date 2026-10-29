@@ -5,11 +5,15 @@ import androidx.room3.Database
 import androidx.room3.RoomDatabase
 import androidx.room3.RoomDatabaseConstructor
 import org.example.rickandmorti.data.dao.CharacterDao
+import org.example.rickandmorti.data.dao.EpisodeDao
+import org.example.rickandmorti.data.dao.LocationDao
 import org.example.rickandmorti.data.entity.CharacterEntity
+import org.example.rickandmorti.data.entity.EpisodeEntity
+import org.example.rickandmorti.data.entity.LocationEntity
 
 @Database(
-    entities = [CharacterEntity::class],
-    version = 1,
+    entities = [CharacterEntity::class, EpisodeEntity::class, LocationEntity::class],
+    version = 2,
     exportSchema = false
 )
 @ConstructedBy(AppDatabaseConstructor::class)

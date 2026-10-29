@@ -9,5 +9,8 @@ actual fun createDatabase(): AppDatabase {
 
     return Room.databaseBuilder<AppDatabase>(
         name = "rickmorty.db"
-    ).setDriver(WebWorkerSQLiteDriver(worker)).build()
+    )
+        .setDriver(WebWorkerSQLiteDriver(worker))
+        .fallbackToDestructiveMigration(dropAllTables = true)
+        .build()
 }
