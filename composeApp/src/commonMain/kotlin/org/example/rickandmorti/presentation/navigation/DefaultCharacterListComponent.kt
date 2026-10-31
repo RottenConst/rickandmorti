@@ -23,7 +23,8 @@ class DefaultCharacterListComponent(
     componentContext: ComponentContext,
     private val characterClicked: (Character) -> Unit,
     private val favoritesStore: FavoritesStore,
-    private val viewModel: CharacterViewModel
+    private val viewModel: CharacterViewModel,
+    initialIsFavoritesOnly: Boolean = false
 ): CharacterListComponent, ComponentContext by componentContext{
 
     private val componentScope = CoroutineScope(SupervisorJob())
@@ -31,7 +32,7 @@ class DefaultCharacterListComponent(
     private val _allCharacters = MutableValue<List<Character>>(emptyList())
     private val _filteredCharacters = MutableValue<List<Character>>(emptyList())
 
-    private val _isFavoritesOnly = MutableValue(false)
+    private val _isFavoritesOnly = MutableValue(initialIsFavoritesOnly)
     override val isFavoritesOnly: Value<Boolean> = _isFavoritesOnly
 
     private val _hasMorePages = MutableValue(true)

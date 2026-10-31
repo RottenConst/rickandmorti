@@ -7,8 +7,8 @@ import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
 import com.arkivanov.decompose.router.stack.push
+import com.arkivanov.decompose.router.stack.pushToFront
 import com.arkivanov.decompose.router.stack.replaceAll
-import com.arkivanov.decompose.value.MutableValue
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.operator.map
 import kotlinx.serialization.Serializable
@@ -22,7 +22,6 @@ import org.example.rickandmorti.presentation.LocationViewModel
 import org.example.rickandmorti.util.distinctUntilChanged
 import org.koin.core.component.KoinComponent
 import org.koin.core.component.inject
-import kotlin.getValue
 
 class DefaultRootComponent(
     componentContext: ComponentContext
@@ -33,8 +32,7 @@ class DefaultRootComponent(
     private val episodesViewModel: EpisodesViewModel by inject()
     private val locationViewModel: LocationViewModel by inject()
     private val navigation = StackNavigation<Config>()
-    private val _activeTab = MutableValue(RootComponent.Tab.CHARACTERS)
-    override val activeTab: Value<RootComponent.Tab> = _activeTab
+
     override val stack: Value<ChildStack<*, RootComponent.Child>> = childStack(
         source = navigation,
         serializer = Config.serializer(),
@@ -42,113 +40,153 @@ class DefaultRootComponent(
         handleBackButton = true,
         childFactory = ::createChild
     )
+
+    override val activeTab: Value<RootComponent.Tab> = stack.map { childStack ->
+        when (childStack.active.configuration) {
+            is Config.CharacterList, is Config.CharacterFavorites -> RootComponent.Tab.CHARACTERS
+            is Config.EpisodesList -> RootComponent.Tab.EPISODES
+            is Config.LocationList -> RootComponent.Tab.LOCATIONS
+            else -> RootComponent.Tab.CHARACTERS
+        }
+    }.distinctUntilChanged()
+
     override val canGoBack: Value<Boolean> = stack.map { it.items.size > 1 }.distinctUntilChanged()
 
     override fun onTabSelected(tab: RootComponent.Tab) {
-        _activeTab.value = tab // Сохраняем активную вкладку
-        when (tab) {
-            RootComponent.Tab.CHARACTERS -> navigation.replaceAll(Config.CharacterList)
-            RootComponent.Tab.EPISODES -> navigation.replaceAll(Config.EpisodesList)
-            RootComponent.Tab.LOCATIONS -> navigation.replaceAll(Config.LocationList)
+        val config = when (tab) {
+            RootComponent.Tab.CHARACTERS -> Config.CharacterList
+            RootComponent.Tab.EPISODES -> Config.EpisodesList
+            RootComponent.Tab.LOCATIONS -> Config.LocationList
         }
+        navigation.replaceAll(config)
     }
 
     override fun goBack() {
         navigation.pop()
     }
 
+    private fun createCharactersChild(
+        componentContext: ComponentContext,
+        characterClicked: (Character) -> Unit,
+        initialFavoriteOnly: Boolean = false
+    ): RootComponent.Child.Characters = RootComponent.Child.Characters(
+        DefaultCharacterListComponent(
+            componentContext = componentContext,
+            favoritesStore = favoritesStore,
+            viewModel = characterViewModel,
+            initialIsFavoritesOnly = initialFavoriteOnly,
+            characterClicked = characterClicked
+        )
+    )
+
+    private fun createCharacterDetailChild(
+        componentContext: ComponentContext,
+        character: Character
+    ): RootComponent.Child.DetailCharacter = RootComponent.Child.DetailCharacter(
+        DefaultDetailCharacterComponent(
+            componentContext = componentContext,
+            character = character,
+            onFinished = { navigation.pop() },
+            favoritesStore = favoritesStore,
+            episodeClicked = { episode -> navigation.pushToFront(Config.DetailEpisode(episode)) },
+            viewModel = characterViewModel,
+            onLocationToScreenClicked = { location -> navigation.pushToFront(Config.DetailLocation(location)) }
+        )
+    )
+
+    private fun createEpisodesChild(
+        componentContext: ComponentContext,
+        episodeClicked: (Episode) -> Unit
+    ): RootComponent.Child.Episodes = RootComponent.Child.Episodes(
+        DefaultEpisodeListComponent(
+            componentContext = componentContext,
+            favoritesStore = favoritesStore,
+            viewModel = episodesViewModel,
+            episodeClicked = episodeClicked
+        )
+    )
+
+    private fun createDetailEpisodeChild(
+        componentContext: ComponentContext,
+        episode: Episode
+    ): RootComponent.Child.DetailEpisode = RootComponent.Child.DetailEpisode(
+        DefaultDetailEpisodeComponent(
+            componentContext = componentContext,
+            episode = episode,
+            favoritesStore = favoritesStore,
+            onFinished = { navigation.pop() },
+            viewModel = episodesViewModel,
+            characterClicked = { episode -> navigation.pushToFront(Config.Detail(episode))}
+        )
+    )
+
+    private fun createLocationsChild(
+        componentContext: ComponentContext,
+        lotionClicked: (Location) -> Unit
+    ): RootComponent.Child.Locations = RootComponent.Child.Locations(
+        DefaultLocationListComponent(
+            componentContext = componentContext,
+            locationClicked = lotionClicked,
+            favoritesStore = favoritesStore,
+            viewModel = locationViewModel
+        )
+    )
+
+    private fun createDetailLocationChild(
+        componentContext: ComponentContext,
+        location: Location
+    ): RootComponent.Child.DetailLocation = RootComponent.Child.DetailLocation(
+        DefaultDetailLocationComponent(
+            componentContext = componentContext,
+            location = location,
+            favoritesStore = favoritesStore,
+            onFinished = { navigation.pop() },
+            viewModel = locationViewModel,
+            characterClicked = { character -> navigation.pushToFront(Config.Detail(character)) }
+        )
+    )
+
     @OptIn(DelicateDecomposeApi::class)
     private fun createChild(
         config: Config,
         componentContext: ComponentContext
     ): RootComponent.Child = when (config) {
-        Config.CharacterList -> RootComponent.Child.Characters(
-            DefaultCharacterListComponent(
-                componentContext = componentContext,
-                favoritesStore = favoritesStore,
-                viewModel = characterViewModel,
-                characterClicked = { character ->
-                    navigation.push(Config.Detail(character))
-                }
-            )
+        is Config.CharacterList -> createCharactersChild(
+            componentContext = componentContext,
+            characterClicked = { character -> navigation.push(Config.Detail(character)) },
         )
 
-        Config.CharacterFavorites -> RootComponent.Child.Favorites(
-            DefaultCharacterListComponent(
-                componentContext = componentContext,
-                favoritesStore = favoritesStore,
-                viewModel = characterViewModel,
-                characterClicked = { character ->
-                    navigation.push(Config.Detail(character))
-                }
-            )
+        is Config.CharacterFavorites -> createCharactersChild(
+            componentContext = componentContext,
+            characterClicked = { character -> navigation.push(Config.Detail(character)) },
+            initialFavoriteOnly = true
         )
 
-        is Config.Detail -> RootComponent.Child.DetailCharacter(
-            DefaultDetailCharacterComponent(
-                componentContext = componentContext,
-                character = config.character,
-                onFinished = { navigation.pop() },
-                favoritesStore = favoritesStore,
-                episodeClicked = { episode ->
-                    navigation.push(Config.DetailEpisode(episode))
-                },
-                viewModel = characterViewModel,
-                onLocationToScreenClicked = { location ->
-                    navigation.push(Config.DetailLocation(location))
-                }
-            )
+        is Config.Detail -> createCharacterDetailChild(
+            componentContext = componentContext,
+            character = config.character
         )
 
-
-        Config.EpisodesList -> RootComponent.Child.Episodes(
-            DefaultEpisodeListComponent(
-                componentContext = componentContext,
-                favoritesStore = favoritesStore,
-                viewModel = episodesViewModel,
-                episodeClicked = { episode ->
-                    navigation.push(Config.DetailEpisode(episode))
-                }
-            )
+        is Config.EpisodesList -> createEpisodesChild(
+            componentContext = componentContext,
+            episodeClicked = { episode -> navigation.push(Config.DetailEpisode(episode)) }
         )
 
-        is Config.DetailEpisode -> RootComponent.Child.DetailEpisode(
-            DefaultDetailEpisodeComponent(
-                componentContext = componentContext,
-                episode = config.episode,
-                favoritesStore = favoritesStore,
-                onFinished = { navigation.pop() },
-                viewModel = episodesViewModel,
-                characterClicked = { character ->
-                    navigation.push(Config.Detail(character))
-                }
-            )
+        is Config.DetailEpisode -> createDetailEpisodeChild(
+            componentContext = componentContext,
+            episode = config.episode
         )
 
-        Config.LocationList -> RootComponent.Child.Locations(
-            DefaultLocationListComponent(
-                componentContext = componentContext,
-                favoritesStore = favoritesStore,
-                viewModel = locationViewModel,
-                locationClicked = { location ->
-                    navigation.push(Config.DetailLocation(location))}
-            )
+        is Config.LocationList -> createLocationsChild(
+            componentContext = componentContext,
+            lotionClicked = { location -> navigation.push(Config.DetailLocation(location))}
         )
 
-        is Config.DetailLocation -> RootComponent.Child.DetailLocation(
-            DefaultDetailLocationComponent(
-                componentContext = componentContext,
-                location = config.location,
-                favoritesStore = favoritesStore,
-                onFinished = { navigation.pop() },
-                viewModel = locationViewModel,
-                characterClicked = { character ->
-                    navigation.push(Config.Detail(character))
-                }
-            )
+        is Config.DetailLocation -> createDetailLocationChild(
+            componentContext = componentContext,
+            location = config.location
         )
     }
-
 
     @Serializable
     private sealed interface Config {
@@ -171,7 +209,6 @@ class DefaultRootComponent(
         data class DetailEpisode(val episode: Episode): Config
 
         @Serializable
-        data class DetailLocation(val location: Location): Config {
-        }
+        data class DetailLocation(val location: Location): Config
     }
 }
