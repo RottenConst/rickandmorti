@@ -162,6 +162,17 @@ extensions.configure<ApplicationExtension> {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
     }
+    testOptions {
+        unitTests {
+            isIncludeAndroidResources = true
+        }
+    }
+}
+
+extensions.configure<com.android.build.api.variant.ApplicationAndroidComponentsExtension> {
+    beforeVariants { variantBuilder ->
+        (variantBuilder as? com.android.build.api.variant.HasUnitTestBuilder)?.enableUnitTest = true
+    }
 }
 
 dependencies {
