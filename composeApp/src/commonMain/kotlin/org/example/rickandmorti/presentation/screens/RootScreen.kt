@@ -18,7 +18,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.LocalContentColor
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
@@ -81,6 +80,7 @@ fun RootScreen(
     }
 
     Scaffold(
+        containerColor = Color(0xFF020808),
         topBar = {
             if (isDetailScreen) {
                 TopAppBar(
@@ -181,8 +181,8 @@ fun RootScreen(
             when (val instance = child.instance) {
                 is RootComponent.Child.DetailCharacter -> CharacterDetailScreen(component = instance.component)
                 is RootComponent.Child.DetailEpisode -> EpisodeDetailScreen(component = instance.component)
-                is RootComponent.Child.Characters -> ListScreen(component = instance.component)
-                is RootComponent.Child.Favorites -> ListScreen(component = instance.component)
+                is RootComponent.Child.Characters -> CharacterListScreen(component = instance.component)
+                is RootComponent.Child.Favorites -> CharacterListScreen(component = instance.component)
                 is RootComponent.Child.Episodes -> EpisodeListScreen(component = instance.component)
                 is RootComponent.Child.Locations -> LocationListScreen(component = instance.component)
                 is RootComponent.Child.DetailLocation -> LocationDetailScreen(component = instance.component)
@@ -218,20 +218,19 @@ private fun CustomBottomBar(
 
             // Цвет иконки и текста
             val targetColor = if (tab == selectedTab) {
-                MaterialTheme.colorScheme.primary
-
+                Color(0xFF76FF03).copy(alpha = 0.8f)
             } else if (isHovered) {
-                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f)
+                Color(0xFFB0BEC5).copy(alpha = 0.8f)
             } else {
-                MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                Color(0xFFB0BEC5)
             }
             val animatedColor by animateColorAsState(targetValue = targetColor, label = "bottom_bar_icon_color")
 
             // Фон при активной вкладке или наведении
             val backgroundColor by animateColorAsState(
                 targetValue = when {
-                    tab == selectedTab -> MaterialTheme.colorScheme.primaryContainer
-                    isHovered -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.1f)
+                    tab == selectedTab -> Color(0xFF2B3138)
+                    isHovered -> Color(0xFF020808).copy(alpha = 0.6f)
                     else -> Color.Transparent
                 },
                 label = "bottom_bar_bg"

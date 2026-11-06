@@ -1,13 +1,11 @@
 package org.example.rickandmorti.presentation.navigation
 
 import com.arkivanov.decompose.ComponentContext
-import com.arkivanov.decompose.DelicateDecomposeApi
 import com.arkivanov.decompose.router.stack.ChildStack
 import com.arkivanov.decompose.router.stack.StackNavigation
 import com.arkivanov.decompose.router.stack.childStack
 import com.arkivanov.decompose.router.stack.pop
-import com.arkivanov.decompose.router.stack.push
-import com.arkivanov.decompose.router.stack.pushToFront
+import com.arkivanov.decompose.router.stack.bringToFront
 import com.arkivanov.decompose.router.stack.replaceAll
 import com.arkivanov.decompose.value.Value
 import com.arkivanov.decompose.value.operator.map
@@ -41,8 +39,8 @@ class DefaultRootComponent(
         childFactory = ::createChild
     )
 
-    override val activeTab: Value<RootComponent.Tab> = stack.map { childStack ->
-        when (childStack.active.configuration) {
+    override val activeTab: Value<RootComponent.Tab> = stack.map { (active) ->
+        when (active.configuration) {
             is Config.CharacterList, is Config.CharacterFavorites -> RootComponent.Tab.CHARACTERS
             is Config.EpisodesList -> RootComponent.Tab.EPISODES
             is Config.LocationList -> RootComponent.Tab.LOCATIONS
@@ -63,6 +61,10 @@ class DefaultRootComponent(
 
     override fun goBack() {
         navigation.pop()
+    }
+
+    private fun navigateTo(config: Config) {
+        navigation.bringToFront(config)
     }
 
     private fun createCharactersChild(
@@ -88,9 +90,9 @@ class DefaultRootComponent(
             character = character,
             onFinished = { navigation.pop() },
             favoritesStore = favoritesStore,
-            episodeClicked = { episode -> navigation.pushToFront(Config.DetailEpisode(episode)) },
+            episodeClicked = { episode -> navigateTo(Config.DetailEpisode(episode)) },
             viewModel = characterViewModel,
-            onLocationToScreenClicked = { location -> navigation.pushToFront(Config.DetailLocation(location)) }
+            onLocationToScreenClicked = { location -> navigateTo(Config.DetailLocation(location)) }
         )
     )
 
@@ -116,7 +118,7 @@ class DefaultRootComponent(
             favoritesStore = favoritesStore,
             onFinished = { navigation.pop() },
             viewModel = episodesViewModel,
-            characterClicked = { episode -> navigation.pushToFront(Config.Detail(episode))}
+            characterClicked = { episode -> navigateTo(Config.Detail(episode))}
         )
     )
 
@@ -142,23 +144,22 @@ class DefaultRootComponent(
             favoritesStore = favoritesStore,
             onFinished = { navigation.pop() },
             viewModel = locationViewModel,
-            characterClicked = { character -> navigation.pushToFront(Config.Detail(character)) }
+            characterClicked = { character -> navigateTo(Config.Detail(character)) }
         )
     )
 
-    @OptIn(DelicateDecomposeApi::class)
     private fun createChild(
         config: Config,
         componentContext: ComponentContext
     ): RootComponent.Child = when (config) {
-        is Config.CharacterList -> createCharactersChild(
+        Config.CharacterList -> createCharactersChild(
             componentContext = componentContext,
-            characterClicked = { character -> navigation.push(Config.Detail(character)) },
+            characterClicked = { character -> navigateTo(Config.Detail(character)) },
         )
 
-        is Config.CharacterFavorites -> createCharactersChild(
+        Config.CharacterFavorites -> createCharactersChild(
             componentContext = componentContext,
-            characterClicked = { character -> navigation.push(Config.Detail(character)) },
+            characterClicked = { character -> navigateTo(Config.Detail(character)) },
             initialFavoriteOnly = true
         )
 
@@ -167,9 +168,9 @@ class DefaultRootComponent(
             character = config.character
         )
 
-        is Config.EpisodesList -> createEpisodesChild(
+        Config.EpisodesList -> createEpisodesChild(
             componentContext = componentContext,
-            episodeClicked = { episode -> navigation.push(Config.DetailEpisode(episode)) }
+            episodeClicked = { episode -> navigateTo(Config.DetailEpisode(episode)) }
         )
 
         is Config.DetailEpisode -> createDetailEpisodeChild(
@@ -177,9 +178,9 @@ class DefaultRootComponent(
             episode = config.episode
         )
 
-        is Config.LocationList -> createLocationsChild(
+        Config.LocationList -> createLocationsChild(
             componentContext = componentContext,
-            lotionClicked = { location -> navigation.push(Config.DetailLocation(location))}
+            lotionClicked = { location -> navigateTo(Config.DetailLocation(location))}
         )
 
         is Config.DetailLocation -> createDetailLocationChild(
@@ -203,12 +204,27 @@ class DefaultRootComponent(
         data object LocationList: Config
 
         @Serializable
-        data class Detail(val character: Character) : Config
+        data class Detail(val character: Character) : Config {
+            override fun equals(other: Any?): Boolean =
+                other is Detail && this.character.id == other.character.id
+
+            override fun hashCode(): Int = character.id.hashCode()
+        }
 
         @Serializable
-        data class DetailEpisode(val episode: Episode): Config
+        data class DetailEpisode(val episode: Episode) : Config {
+            override fun equals(other: Any?): Boolean =
+                other is DetailEpisode && this.episode.id == other.episode.id
+
+            override fun hashCode(): Int = episode.id.hashCode()
+        }
 
         @Serializable
-        data class DetailLocation(val location: Location): Config
+        data class DetailLocation(val location: Location) : Config {
+            override fun equals(other: Any?): Boolean =
+                other is DetailLocation && this.location.id == other.location.id
+
+            override fun hashCode(): Int = location.id.hashCode()
+        }
     }
 }
