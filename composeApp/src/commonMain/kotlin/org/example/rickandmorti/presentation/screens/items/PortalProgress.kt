@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.material3.Surface
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.rotate
@@ -31,28 +32,51 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import kotlin.math.PI
-import kotlin.math.abs
+import kotlin.math.absoluteValue
 import kotlin.math.cos
 import kotlin.math.sin
+
+private const val PathPoints = 90
+private const val ParticleCount = 36
+private const val DegreesPerParticle = 360f / ParticleCount
+
+private val ParticleColors = listOf(
+    Color(0xFFD4FF00),
+    Color(0xFFB2FF59),
+    Color(0xFF76FF03)
+)
+
+private class PortalPathCache(
+    val cos: FloatArray,
+    val sin: FloatArray,
+    val angles: FloatArray
+)
 
 @Composable
 fun PortalProgress(
     modifier: Modifier = Modifier,
-    size: Dp = 80.dp
+    size: Dp = 80.dp,
+    isAnimated: Boolean = true
 ) {
+    if (isAnimated) {
+        AnimatedPortalProgress(modifier = modifier, size = size)
+    } else {
+        StaticPortalProgress(modifier = modifier, size = size)
+    }
+}
 
-    val infiniteTransition = rememberInfiniteTransition(
-        label = "portal"
-    )
+@Composable
+private fun AnimatedPortalProgress(
+    modifier: Modifier,
+    size: Dp
+) {
+    val infiniteTransition = rememberInfiniteTransition(label = "portal")
 
     val rotation by infiniteTransition.animateFloat(
         initialValue = 0f,
         targetValue = 360f,
         animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 6000,
-                easing = LinearEasing
-            )
+            animation = tween(durationMillis = 6000, easing = LinearEasing)
         ),
         label = "rotation"
     )
@@ -61,10 +85,7 @@ fun PortalProgress(
         initialValue = 0f,
         targetValue = (PI * 2).toFloat(),
         animationSpec = infiniteRepeatable(
-            animation = tween(
-                durationMillis = 1400,
-                easing = LinearEasing
-            )
+            animation = tween(durationMillis = 1400, easing = LinearEasing)
         ),
         label = "noise"
     )
@@ -79,11 +100,64 @@ fun PortalProgress(
         label = "pulse"
     )
 
+    PortalContent(
+        modifier = modifier,
+        size = size,
+        rotation = rotation,
+        noisePhase = noisePhase,
+        pulse = pulse
+    )
+}
+
+@Composable
+private fun StaticPortalProgress(
+    modifier: Modifier,
+    size: Dp
+) {
+    PortalContent(
+        modifier = modifier,
+        size = size,
+        rotation = 0f,
+        noisePhase = 0f,
+        pulse = 1f
+    )
+}
+
+@Composable
+private fun PortalContent(
+    modifier: Modifier,
+    size: Dp,
+    rotation: Float,
+    noisePhase: Float,
+    pulse: Float
+) {
+    val pathCache = remember {
+        val cosArr = FloatArray(PathPoints + 1)
+        val sinArr = FloatArray(PathPoints + 1)
+        val angleArr = FloatArray(PathPoints + 1)
+        for (i in 0..PathPoints) {
+            val angle = (i.toFloat() / PathPoints) * (PI * 2).toFloat()
+            cosArr[i] = cos(angle)
+            sinArr[i] = sin(angle)
+            angleArr[i] = angle
+        }
+        PortalPathCache(cosArr, sinArr, angleArr)
+    }
+
+    val particleAnglesRad = remember {
+        FloatArray(ParticleCount) { i ->
+            (i * DegreesPerParticle / 180f * PI).toFloat()
+        }
+    }
+
+    val portalPaths = remember {
+        Array(4) { Path() }
+    }
+
     Box(
         modifier = modifier.size(size),
         contentAlignment = Alignment.Center
     ) {
-
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
@@ -92,7 +166,6 @@ fun PortalProgress(
                     scaleY = pulse
                 }
         ) {
-
             val center = this.size.center
 
             drawCircle(
@@ -113,16 +186,16 @@ fun PortalProgress(
                 .fillMaxSize()
                 .rotate(rotation)
         ) {
-
             val center = this.size.center
+            val rotationRad = rotation.toRadians()
 
             repeat(4) { layer ->
+                val radius = this.size.minDimension * (0.42f - layer * 0.05f)
+                val path = portalPaths[layer]
 
-                val radius =
-                    this.size.minDimension *
-                            (0.42f - layer * 0.05f)
-
-                val path = createPortalPath(
+                updatePortalPath(
+                    path = path,
+                    cache = pathCache,
                     center = center,
                     radius = radius,
                     phase = noisePhase + layer
@@ -144,19 +217,16 @@ fun PortalProgress(
                 )
             }
 
-            repeat(60) { particle ->
-                val angle = particle * 6f + rotation
-                val radius = this.size.minDimension * 0.42f + (abs(sin(noisePhase + particle)) * 14f)
-                val x = center.x + cos(angle.toRadians()) * radius
-                val y = center.y + sin(angle.toRadians()) * radius
+            repeat(ParticleCount) { particle ->
+                val baseAngle = particleAnglesRad[particle] + rotationRad
+                val noiseOffset = sin(noisePhase + particle).absoluteValue
+                val radius = this.size.minDimension * 0.42f + noiseOffset * 14f
+                val x = center.x + cos(baseAngle) * radius
+                val y = center.y + sin(baseAngle) * radius
 
                 drawCircle(
-                    color = listOf(
-                        Color(0xFFD4FF00),
-                        Color(0xFFB2FF59),
-                        Color(0xFF76FF03)
-                    )[particle % 3],
-                    radius = 2f + (abs(sin(noisePhase + particle)) * 3f),
+                    color = ParticleColors[particle % 3],
+                    radius = 2f + noiseOffset * 3f,
                     center = Offset(x, y)
                 )
             }
@@ -176,18 +246,19 @@ fun PortalProgress(
     }
 }
 
-private fun createPortalPath(
+private fun updatePortalPath(
+    path: Path,
+    cache: PortalPathCache,
     center: Offset,
     radius: Float,
     phase: Float
-): Path {
-
-    val path = Path()
-    val points = 180
-
-    for (i in 0..points) {
-
-        val angle = (i.toFloat() / points) * (PI * 2).toFloat()
+) {
+    path.reset()
+    val size = cache.cos.size
+    for (i in 0 until size) {
+        val cosA = cache.cos[i]
+        val sinA = cache.sin[i]
+        val angle = cache.angles[i]
         val distortion =
             sin(angle * 5f + phase) * 10f +
                     cos(angle * 11f - phase * 1.2f) * 7f +
@@ -195,17 +266,15 @@ private fun createPortalPath(
                     cos(angle * 31f + phase * 1.7f) * 3f
 
         val finalRadius = radius + distortion
-        val x = center.x + cos(angle) * finalRadius
-        val y = center.y + sin(angle) * finalRadius
+        val x = center.x + cosA * finalRadius
+        val y = center.y + sinA * finalRadius
         if (i == 0) {
             path.moveTo(x, y)
         } else {
             path.lineTo(x, y)
         }
     }
-
     path.close()
-    return path
 }
 
 private fun Float.toRadians(): Float =
