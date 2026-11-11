@@ -53,20 +53,20 @@ private class PortalPathCache(
 )
 
 @Composable
-fun PortalProgress(
+fun PortalIndicator(
     modifier: Modifier = Modifier,
     size: Dp = 80.dp,
     isAnimated: Boolean = true
 ) {
     if (isAnimated) {
-        AnimatedPortalProgress(modifier = modifier, size = size)
+        AnimatedPortalIndicator(modifier = modifier, size = size)
     } else {
-        StaticPortalProgress(modifier = modifier, size = size)
+        StaticPortalIndicator(modifier = modifier, size = size)
     }
 }
 
 @Composable
-private fun AnimatedPortalProgress(
+private fun AnimatedPortalIndicator(
     modifier: Modifier,
     size: Dp
 ) {
@@ -110,7 +110,7 @@ private fun AnimatedPortalProgress(
 }
 
 @Composable
-private fun StaticPortalProgress(
+private fun StaticPortalIndicator(
     modifier: Modifier,
     size: Dp
 ) {
@@ -282,7 +282,7 @@ private fun Float.toRadians(): Float =
 
 @Preview
 @Composable
-fun PortalProgressPreview() {
+fun PortalIndicatorPreview() {
     Surface(
         color = Color(0xFF151515)
     ) {
@@ -290,14 +290,14 @@ fun PortalProgressPreview() {
             modifier = Modifier.padding(24.dp),
             contentAlignment = Alignment.Center
         ) {
-            PortalProgress()
+            PortalIndicator(isAnimated = true)
         }
     }
 }
 
 @Preview
 @Composable
-fun PortalProgressSizesPreview() {
+fun PortalIndicatorSizesPreview() {
     Surface(
         color = Color(0xFF151515)
     ) {
@@ -306,9 +306,9 @@ fun PortalProgressSizesPreview() {
             horizontalArrangement = Arrangement.spacedBy(16.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            PortalProgress(size = 40.dp)
-            PortalProgress(size = 80.dp)
-            PortalProgress(size = 120.dp)
+            PortalIndicator(size = 40.dp)
+            PortalIndicator(size = 80.dp)
+            PortalIndicator(size = 120.dp)
         }
     }
 }

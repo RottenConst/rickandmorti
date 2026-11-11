@@ -55,11 +55,11 @@ fun ItemCharacter(
             containerColor = Color(0xFF1D2228)
         ),
         border = BorderStroke(
-            1.dp,
+            2.dp,
             Color(0xFF2B3138)
         ),
         onClick = onClick,
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Column (
             modifier = Modifier.padding(12.dp)
@@ -68,6 +68,16 @@ fun ItemCharacter(
                 modifier = Modifier.fillMaxWidth(),
                 contentAlignment = Alignment.TopEnd
             ) {
+                IconButton(
+                    onClick = { onToggleFavorite(character) },
+                    modifier = Modifier.align(Alignment.TopEnd)
+                ) {
+                    Icon(
+                        imageVector = TablerIcons.Heart,
+                        contentDescription = "favorite icon",
+                        tint = if (isFavorite) Color(0xFF76FF03) else Color(0xFFB0BEC5)
+                    )
+                }
                 Column(
                     horizontalAlignment = Alignment.CenterHorizontally,
                     modifier = Modifier.fillMaxWidth()
@@ -91,16 +101,7 @@ fun ItemCharacter(
                         InfoChip(character.species)
                     }
                 }
-                IconButton(
-                    onClick = { onToggleFavorite(character) },
-                    modifier = Modifier.align(Alignment.TopEnd)
-                ) {
-                    Icon(
-                        imageVector = TablerIcons.Heart,
-                        contentDescription = "favorite icon",
-                        tint = if (isFavorite) Color(0xFF76FF03) else Color(0xFFB0BEC5)
-                    )
-                }
+
             }
         }
     }
@@ -113,11 +114,11 @@ private fun PortalAvatar(
     size: Dp
 ) {
     Box(
-        modifier = modifier.size(size),
+        modifier = modifier.size(size).padding(top = 16.dp),
         contentAlignment = Alignment.Center
     ) {
 
-        PortalProgress(
+        PortalIndicator(
             modifier = Modifier.fillMaxSize(),
             isAnimated = false
         )
@@ -126,7 +127,7 @@ private fun PortalAvatar(
             model = imageUrl,
             contentDescription = null,
             modifier = Modifier
-                .size(size * 0.82f)
+                .size(size * 0.78f)
                 .clip(CircleShape),
             contentScale = ContentScale.Crop
         )
