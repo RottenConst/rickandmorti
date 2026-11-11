@@ -33,6 +33,8 @@ import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.distinctUntilChanged
 import org.example.rickandmorti.presentation.navigation.CharacterListComponent
+import org.example.rickandmorti.presentation.screens.items.CharacterFilter
+import org.example.rickandmorti.presentation.screens.items.CharacterFilters
 import org.example.rickandmorti.presentation.screens.items.HeroHeaderCollapse
 import org.example.rickandmorti.presentation.screens.items.ItemCharacter
 import org.example.rickandmorti.presentation.screens.items.PortalIndicator
@@ -54,6 +56,12 @@ fun CharacterListScreen(
 
     val listState = rememberLazyGridState()
     var loadingMore by remember { mutableStateOf(false) }
+
+    var selectedFilter by remember {
+        mutableStateOf(
+            CharacterFilter.ALL
+        )
+    }
 
     LaunchedEffect(debouncedQuery.value, isFavoritesOnly) {
         component.loadSearch(debouncedQuery.value.takeIf { it.isNotBlank() })
@@ -113,6 +121,13 @@ fun CharacterListScreen(
                     SearchPortalBar(
                         query = query,
                         onQueryChange = { query = it}
+                    )
+                }
+
+                item(span = { GridItemSpan(maxLineSpan)}) {
+                    CharacterFilters(
+                        selected = selectedFilter,
+                        onSelected = { selectedFilter = it }
                     )
                 }
 
